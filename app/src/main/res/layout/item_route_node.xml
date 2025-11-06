@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="12dp"
+    app:cardElevation="2dp"
+    app:cardCornerRadius="8dp"
+    app:strokeColor="@android:color/darker_gray"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/labelNo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No." />
+
+        <Spinner
+            android:id="@+id/spinnerNo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/labelLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Location" />
+
+        <EditText
+            android:id="@+id/editLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="48dp"
+            android:background="@drawable/bg_input_rect"
+            android:inputType="text" />
+
+        <TextView
+            android:id="@+id/labelPlace"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="The place you're looking for" />
+
+        <EditText
+            android:id="@+id/editPlace"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="48dp"
+            android:background="@drawable/bg_input_rect"
+            android:inputType="text" />
+
+        <TextView
+            android:id="@+id/labelDistance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Distance" />
+
+        <EditText
+            android:id="@+id/editDistance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="48dp"
+            android:background="@drawable/bg_input_rect"
+            android:inputType="numberDecimal" />
+
+        <EditText
+            android:id="@+id/editExtraInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="48dp"
+            android:background="@drawable/bg_input_rect"
+            android:inputType="text" />
+
+        <TextView
+            android:id="@+id/labelAdditional"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Additional requirements" />
+
+        <EditText
+            android:id="@+id/editAdditionalRequirements"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="top|start"
+            android:background="@drawable/bg_input_rect"
+            android:inputType="textMultiLine"
+            android:minLines="5" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
