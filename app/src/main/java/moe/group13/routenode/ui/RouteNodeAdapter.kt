@@ -19,6 +19,8 @@ class RouteNodeAdapter(
         const val FOOTER_VIEW_TYPE = 1
     }
 
+    private var suppressSpinnerCallback: Boolean = false
+
     data class RouteNodeData(
         var no: Int = 1,
         var location: String = "",
@@ -77,10 +79,30 @@ class RouteNodeAdapter(
 
         nodeHolder.spinnerNo.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
+                if (suppressSpinnerCallback) return
+
                 val bindingPos = nodeHolder.bindingAdapterPosition
-                if (bindingPos != RecyclerView.NO_POSITION) {
-                    items[bindingPos].no = pos + 1
+                if (bindingPos == RecyclerView.NO_POSITION) return
+
+                val newNo = pos + 1
+                val currentItem = items[bindingPos]
+                val oldNo = currentItem.no
+
+                if (newNo == oldNo) return
+
+                val otherIndex = items.indexOfFirst { it.no == newNo && it !== currentItem }
+
+                suppressSpinnerCallback = true
+                if (otherIndex >= 0) {
+                    items[bindingPos].no = newNo
+                    items[otherIndex].no = oldNo
+                    notifyItemChanged(bindingPos)
+                    notifyItemChanged(otherIndex)
+                } else {
+                    items[bindingPos].no = newNo
+                    notifyItemChanged(bindingPos)
                 }
+                suppressSpinnerCallback = false
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {
