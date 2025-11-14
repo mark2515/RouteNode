@@ -1,6 +1,7 @@
 package moe.group13.routenode
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
@@ -8,11 +9,24 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import moe.group13.routenode.ui.AccountFragment
 import moe.group13.routenode.ui.FavoritesFragment
 import moe.group13.routenode.ui.SearchFragment
+import com.google.firebase.firestore.FirebaseFirestore
 
 class MainActivity : AppCompatActivity() {
+    private val db = FirebaseFirestore.getInstance()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // TEST DATABASE
+        val testData = hashMapOf("message" to "Hello Firebase!")
+        db.collection("test").add(testData)
+            .addOnSuccessListener { documentReference ->
+                Log.d("FIREBASE", "DocumentSnapshot added with ID: ${documentReference.id}")
+            }
+            .addOnFailureListener { e ->
+                Log.w("FIREBASE", "Error adding document", e)
+            }
 
         val viewPager = findViewById<ViewPager2>(R.id.view_pager)
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
