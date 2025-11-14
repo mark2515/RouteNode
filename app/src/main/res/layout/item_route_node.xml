@@ -38,14 +38,35 @@
             android:layout_marginTop="16dp"
             android:text="Location" />
 
-        <EditText
-            android:id="@+id/editLocation"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:minHeight="48dp"
-            android:background="@drawable/bg_input_rect"
-            android:inputType="text" />
+            android:layout_marginTop="8dp">
+
+            <EditText
+                android:id="@+id/editLocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_toStartOf="@+id/buttonMoreOptions"
+                android:minHeight="48dp"
+                android:background="@drawable/bg_input_rect"
+                android:inputType="text"
+                android:paddingEnd="8dp" />
+
+            <ImageButton
+                android:id="@+id/buttonMoreOptions"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:text="..."
+                android:textSize="18sp"
+                android:contentDescription="Use Common Locations"
+                android:src="@android:drawable/ic_menu_more" />
+
+        </RelativeLayout>
 
         <TextView
             android:id="@+id/labelPlace"

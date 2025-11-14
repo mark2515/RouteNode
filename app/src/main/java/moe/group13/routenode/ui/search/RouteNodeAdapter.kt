@@ -41,6 +41,7 @@ class RouteNodeAdapter(
         val editDistance: EditText = itemView.findViewById(R.id.editDistance)
         val editAdditional: EditText = itemView.findViewById(R.id.editAdditionalRequirements)
         val buttonDelete: ImageButton = itemView.findViewById(R.id.buttonDelete)
+        val buttonMoreOptions: ImageButton = itemView.findViewById(R.id.buttonMoreOptions)
     }
 
     inner class FooterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -158,6 +159,10 @@ class RouteNodeAdapter(
         } else {
             nodeHolder.buttonDelete.visibility = View.GONE
         }
+
+        nodeHolder.buttonMoreOptions.setOnClickListener {
+            showMoreOptionsDialog(nodeHolder.itemView)
+        }
     }
 
     override fun getItemCount(): Int = items.size + 1
@@ -177,6 +182,19 @@ class RouteNodeAdapter(
             .setMessage("Are you sure you want to delete Route Node No. $nodeNo?")
             .setPositiveButton("Confirm") { dialog, _ ->
                 deleteNode(view.context, position, nodeNo)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    private fun showMoreOptionsDialog(view: View) {
+        AlertDialog.Builder(view.context)
+            .setTitle("Use Common Locations")
+            .setMessage("Common Locations")
+            .setPositiveButton("OK") { dialog, _ ->
                 dialog.dismiss()
             }
             .setNegativeButton("Cancel") { dialog, _ ->
