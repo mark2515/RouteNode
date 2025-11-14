@@ -46,6 +46,7 @@ class RouteNodeAdapter(
 
     inner class FooterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val addButton: View = itemView.findViewById(R.id.buttonAddNode)
+        val askAIButton: View = itemView.findViewById(R.id.buttonAskAI)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
