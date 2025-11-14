@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.Spinner
 import androidx.recyclerview.widget.RecyclerView
 import moe.group13.routenode.R
@@ -26,7 +27,6 @@ class RouteNodeAdapter(
         var location: String = "",
         var place: String = "",
         var distance: String = "",
-        var extraField: String = "",
         var additionalRequirements: String = ""
     )
 
@@ -35,8 +35,8 @@ class RouteNodeAdapter(
         val editLocation: EditText = itemView.findViewById(R.id.editLocation)
         val editPlace: EditText = itemView.findViewById(R.id.editPlace)
         val editDistance: EditText = itemView.findViewById(R.id.editDistance)
-        val editExtraInput: EditText = itemView.findViewById(R.id.editExtraInput)
         val editAdditional: EditText = itemView.findViewById(R.id.editAdditionalRequirements)
+        val buttonDelete: ImageButton = itemView.findViewById(R.id.buttonDelete)
     }
 
     inner class FooterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -113,8 +113,17 @@ class RouteNodeAdapter(
         nodeHolder.editLocation.setText(item.location)
         nodeHolder.editPlace.setText(item.place)
         nodeHolder.editDistance.setText(item.distance)
-        nodeHolder.editExtraInput.setText(item.extraField)
         nodeHolder.editAdditional.setText(item.additionalRequirements)
+
+        // Show delete button only if there are 2 or more items
+        if (items.size >= 2) {
+            nodeHolder.buttonDelete.visibility = View.VISIBLE
+            nodeHolder.buttonDelete.setOnClickListener {
+                deleteNode(position)
+            }
+        } else {
+            nodeHolder.buttonDelete.visibility = View.GONE
+        }
     }
 
     override fun getItemCount(): Int = items.size + 1
@@ -125,6 +134,26 @@ class RouteNodeAdapter(
 
     fun addNode() {
         items.add(RouteNodeData(no = items.size + 1))
+        notifyDataSetChanged()
+    }
+
+    private fun deleteNode(position: Int) {
+        if (position < 0 || position >= items.size || items.size < 2) {
+            return
+        }
+
+        val deletedNo = items[position].no
+        
+        // Remove the item
+        items.removeAt(position)
+
+        items.forEach { item ->
+            if (item.no > deletedNo) {
+                item.no -= 1
+            }
+        }
+
+        // Notify the adapter of the change
         notifyDataSetChanged()
     }
 }

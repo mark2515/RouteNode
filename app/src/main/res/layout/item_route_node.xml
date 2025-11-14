@@ -9,11 +9,15 @@
     app:strokeColor="@android:color/darker_gray"
     app:strokeWidth="1dp">
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
 
         <TextView
             android:id="@+id/labelNo"
@@ -75,15 +79,6 @@
             android:background="@drawable/bg_input_rect"
             android:inputType="numberDecimal" />
 
-        <EditText
-            android:id="@+id/editExtraInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:minHeight="48dp"
-            android:background="@drawable/bg_input_rect"
-            android:inputType="text" />
-
         <TextView
             android:id="@+id/labelAdditional"
             android:layout_width="wrap_content"
@@ -101,5 +96,18 @@
             android:inputType="textMultiLine"
             android:minLines="5" />
 
-    </LinearLayout>
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/buttonDelete"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_delete"
+            android:contentDescription="Delete"
+            android:visibility="gone" />
+
+    </FrameLayout>
 </com.google.android.material.card.MaterialCardView>
