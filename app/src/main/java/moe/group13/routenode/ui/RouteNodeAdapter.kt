@@ -8,6 +8,8 @@ import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Spinner
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import moe.group13.routenode.R
 
@@ -119,7 +121,7 @@ class RouteNodeAdapter(
         if (items.size >= 2) {
             nodeHolder.buttonDelete.visibility = View.VISIBLE
             nodeHolder.buttonDelete.setOnClickListener {
-                deleteNode(position)
+                showDeleteConfirmationDialog(nodeHolder.itemView, position, item.no)
             }
         } else {
             nodeHolder.buttonDelete.visibility = View.GONE
@@ -137,7 +139,21 @@ class RouteNodeAdapter(
         notifyDataSetChanged()
     }
 
-    private fun deleteNode(position: Int) {
+    private fun showDeleteConfirmationDialog(view: View, position: Int, nodeNo: Int) {
+        AlertDialog.Builder(view.context)
+            .setTitle("Delete Route Node")
+            .setMessage("Are you sure you want to delete Route Node No. $nodeNo?")
+            .setPositiveButton("Confirm") { dialog, _ ->
+                deleteNode(view.context, position, nodeNo)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    private fun deleteNode(context: android.content.Context, position: Int, nodeNo: Int) {
         if (position < 0 || position >= items.size || items.size < 2) {
             return
         }
@@ -155,5 +171,8 @@ class RouteNodeAdapter(
 
         // Notify the adapter of the change
         notifyDataSetChanged()
+
+        // Show toast message
+        Toast.makeText(context, "Route Node No. $nodeNo Deleted", Toast.LENGTH_SHORT).show()
     }
 }
