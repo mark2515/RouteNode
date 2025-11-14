@@ -1,5 +1,7 @@
 package moe.group13.routenode.ui
 
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -117,6 +119,36 @@ class RouteNodeAdapter(
         nodeHolder.editDistance.setText(item.distance)
         nodeHolder.editAdditional.setText(item.additionalRequirements)
 
+        removeTextWatcher(nodeHolder.editLocation)
+        removeTextWatcher(nodeHolder.editPlace)
+        removeTextWatcher(nodeHolder.editDistance)
+        removeTextWatcher(nodeHolder.editAdditional)
+
+        addTextWatcher(nodeHolder.editLocation) { text ->
+            val pos = nodeHolder.bindingAdapterPosition
+            if (pos != RecyclerView.NO_POSITION && pos < items.size) {
+                items[pos].location = text
+            }
+        }
+        addTextWatcher(nodeHolder.editPlace) { text ->
+            val pos = nodeHolder.bindingAdapterPosition
+            if (pos != RecyclerView.NO_POSITION && pos < items.size) {
+                items[pos].place = text
+            }
+        }
+        addTextWatcher(nodeHolder.editDistance) { text ->
+            val pos = nodeHolder.bindingAdapterPosition
+            if (pos != RecyclerView.NO_POSITION && pos < items.size) {
+                items[pos].distance = text
+            }
+        }
+        addTextWatcher(nodeHolder.editAdditional) { text ->
+            val pos = nodeHolder.bindingAdapterPosition
+            if (pos != RecyclerView.NO_POSITION && pos < items.size) {
+                items[pos].additionalRequirements = text
+            }
+        }
+
         // Show delete button only if there are 2 or more items
         if (items.size >= 2) {
             nodeHolder.buttonDelete.visibility = View.VISIBLE
@@ -174,5 +206,25 @@ class RouteNodeAdapter(
 
         // Show toast message
         Toast.makeText(context, "Route Node No. $nodeNo Deleted", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun addTextWatcher(editText: EditText, onTextChanged: (String) -> Unit) {
+        val watcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                onTextChanged(s?.toString() ?: "")
+            }
+        }
+        editText.tag = watcher
+        editText.addTextChangedListener(watcher)
+    }
+
+    private fun removeTextWatcher(editText: EditText) {
+        val watcher = editText.tag as? TextWatcher
+        if (watcher != null) {
+            editText.removeTextChangedListener(watcher)
+            editText.tag = null
+        }
     }
 }
