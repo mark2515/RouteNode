@@ -1,67 +1,90 @@
-package moe.group13.routenode.ui.favorites
-
+package moe.group13.routenode.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
-
+import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import moe.group13.routenode.R
-import moe.group13.routenode.ui.manual.AppDatabase
-import moe.group13.routenode.ui.manual.RestaurantDao
-import moe.group13.routenode.ui.manual.RouteDao
+import moe.group13.routenode.data.model.Route
+import moe.group13.routenode.ui.routes.RouteAdapter
+import moe.group13.routenode.ui.routes.RouteViewModel
 
 class FavoritesFragment : Fragment() {
-    private lateinit var db: AppDatabase
-    private lateinit var routeDao: RouteDao
-    private lateinit var restaurantDao: RestaurantDao
+    private val viewModel: RouteViewModel by viewModels()
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var emptyText: View
+    private lateinit var progressBar: View
+    private lateinit var adapter: RouteAdapter
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        /*
-        // Initialize Room database and DAOs
-        db = AppDatabase.getDatabase(requireContext())
-        routeDao = db.routeDao()
-        restaurantDao = db.restaurantDao()
-
-    */
         return inflater.inflate(R.layout.fragment_favorites, container, false)
     }
-/*
-    override fun onResume() {
-        super.onResume()
-        loadRoutes()
-    }
-    private fun loadRoutes() {
-        val containerLayout = view?.findViewById<LinearLayout>(R.id.historyContainer)
-        containerLayout?.removeAllViews()
-        lifecycleScope.launch {
-            val routes = routeDao.getAllRoutes()
-            routes.forEach { route ->
-                val routeTv = TextView(requireContext())
-                routeTv.text = "Route: ${route.name}"
-                routeTv.textSize = 18f
-                routeTv.setPadding(16, 16, 16, 8)
-                containerLayout?.addView(routeTv)
 
-                // Fetch restaurants for this route
-                val restaurants = restaurantDao.getRestaurantsForRoute(route.routeId)
-                restaurants.forEach { restaurant ->
-                    val restaurantTv = TextView(requireContext())
-                    restaurantTv.text = "  - ${restaurant.name} (${restaurant.lat}, ${restaurant.lng})"
-                    restaurantTv.setPadding(32, 8, 16, 8)
-                    containerLayout?.addView(restaurantTv)
-                }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        recyclerView = view.findViewById(R.id.favoritesRecyclerView)
+        emptyText = view.findViewById(R.id.emptyFavoritesText)
+        progressBar = view.findViewById(R.id.favoritesProgressBar)
+
+        recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        adapter = RouteAdapter(emptyList()) { route ->
+            // Handle route click - could navigate to route details
+            onRouteClick(route)
+        }
+        recyclerView.adapter = adapter
+
+        // Observe favorites
+        viewModel.favorites.observe(viewLifecycleOwner) { routes ->
+            adapter.update(routes)
+            updateEmptyState(routes.isEmpty())
+        }
+
+        // Observe loading state
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        }
+
+        // Observe error messages
+        viewModel.errorMessage.observe(viewLifecycleOwner) { error ->
+            error?.let {
+                // Could show a Snackbar or Toast here
+                android.util.Log.e("FavoritesFragment", it)
             }
+        }
+
+        // Load favorites when fragment is created
+        viewModel.loadFavorites()
+    }
+
+    private fun updateEmptyState(isEmpty: Boolean) {
+        val isLoading = viewModel.isLoading.value ?: false
+        if (isEmpty && !isLoading) {
+            emptyText.visibility = View.VISIBLE
+            recyclerView.visibility = View.GONE
+        } else {
+            emptyText.visibility = View.GONE
+            recyclerView.visibility = View.VISIBLE
         }
     }
 
- */
+    private fun onRouteClick(route: Route) {
+        // Handle route click - could navigate to route details screen
+        // For now, just toggle favorite as an example
+        viewModel.toggleFavorite(route)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh favorites when fragment becomes visible
+        viewModel.loadFavorites()
+    }
 }

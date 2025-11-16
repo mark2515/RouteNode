@@ -3,8 +3,9 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 
-    id("kotlin-kapt")
     alias(libs.plugins.google.services)
+    id("kotlin-kapt")
+
 }
 
 android {
@@ -71,4 +72,6 @@ dependencies {
     val lifecycle_version = "2.9.1"
     implementation("androidx.room:room-ktx:$room_version")
     kapt("androidx.room:room-compiler:$room_version")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    kapt("com.github.bumptech.glide:compiler:4.16.0")
 }
