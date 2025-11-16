@@ -1,4 +1,4 @@
-package moe.group13.routenode.ui.manualFragment
+package moe.group13.routenode.ui.manual
 
 import android.content.DialogInterface
 import android.os.Bundle
@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope

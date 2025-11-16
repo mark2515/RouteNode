@@ -74,4 +74,7 @@ dependencies {
     kapt("androidx.room:room-compiler:$room_version")
     implementation("com.github.bumptech.glide:glide:4.16.0")
     kapt("com.github.bumptech.glide:compiler:4.16.0")
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
+    implementation("com.google.android.libraries.places:places:4.0.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }

@@ -1,4 +1,4 @@
-package moe.group13.routenode.ui.manualFragment
+package moe.group13.routenode.ui.manual
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
