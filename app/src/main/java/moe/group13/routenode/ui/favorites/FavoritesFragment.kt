@@ -12,9 +12,9 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
 import moe.group13.routenode.R
-import moe.group13.routenode.ui.manualFragment.AppDatabase
-import moe.group13.routenode.ui.manualFragment.RestaurantDao
-import moe.group13.routenode.ui.manualFragment.RouteDao
+import moe.group13.routenode.ui.manual.AppDatabase
+import moe.group13.routenode.ui.manual.RestaurantDao
+import moe.group13.routenode.ui.manual.RouteDao
 
 class FavoritesFragment : Fragment() {
     private lateinit var db: AppDatabase
@@ -25,15 +25,16 @@ class FavoritesFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        /*
         // Initialize Room database and DAOs
         db = AppDatabase.getDatabase(requireContext())
         routeDao = db.routeDao()
         restaurantDao = db.restaurantDao()
 
-
+    */
         return inflater.inflate(R.layout.fragment_favorites, container, false)
     }
-
+/*
     override fun onResume() {
         super.onResume()
         loadRoutes()
@@ -61,4 +62,6 @@ class FavoritesFragment : Fragment() {
             }
         }
     }
+
+ */
 }
