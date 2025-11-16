@@ -7,9 +7,8 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import moe.group13.routenode.ui.AccountFragment
-import moe.group13.routenode.ui.favorites.FavoritesFragment
+import moe.group13.routenode.ui.FavoritesFragment
 import moe.group13.routenode.ui.SearchFragment
-import moe.group13.routenode.ui.manualFragment.ManualSearchFragment
 import com.google.firebase.firestore.FirebaseFirestore
 
 class MainActivity : AppCompatActivity() {
@@ -35,8 +34,7 @@ class MainActivity : AppCompatActivity() {
         val fragments = listOf(
             SearchFragment(),
             FavoritesFragment(),
-            AccountFragment(),
-            ManualSearchFragment()
+            AccountFragment()
         )
 
         viewPager.adapter = object : FragmentStateAdapter(this) {
@@ -50,7 +48,6 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_search -> viewPager.currentItem = 0
                 R.id.nav_favorites -> viewPager.currentItem = 1
                 R.id.nav_account -> viewPager.currentItem = 2
-                R.id.nav_manual_search -> viewPager.currentItem = 3
             }
             true
         }

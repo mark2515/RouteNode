@@ -3,11 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 
-
     alias(libs.plugins.google.services)
-
-
-    id("kotlin-kapt")
 }
 
 android {
@@ -69,21 +65,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
-    // Erik's dependencies
-
-    implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("androidx.fragment:fragment-ktx:1.6.0")
-    implementation("com.google.android.material:material:1.11.0")
-    implementation("com.google.android.gms:play-services-maps:18.2.0")
-    implementation("com.google.android.gms:play-services-location:21.0.1")
-    implementation("com.google.android.libraries.places:places:3.4.0")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.google.android.material:material:1.10.0")
-    implementation("androidx.viewpager2:viewpager2:1.1.0")
-    implementation("com.google.android.material:material:1.11.0")
-    val room_version = "2.7.0"
-    val lifecycle_version = "2.9.1"
-    implementation("androidx.room:room-ktx:$room_version")
-    kapt("androidx.room:room-compiler:$room_version")
 }
