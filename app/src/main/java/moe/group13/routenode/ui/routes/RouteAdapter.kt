@@ -1,4 +1,4 @@
-package moe.group13.routenode.data
+package moe.group13.routenode.ui.routes
 
 import android.view.LayoutInflater
 import android.view.View
@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import moe.group13.routenode.R
-import moe.group13.routenode.data.Route
+import moe.group13.routenode.data.model.Route
 
 class RouteAdapter(
     private var routes: List<Route>,

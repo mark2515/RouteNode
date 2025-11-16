@@ -1,7 +1,7 @@
-package moe.group13.routenode.data
+package moe.group13.routenode.data.model
 
-import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.GeoPoint
 
 data class Route (
     @DocumentId val id: String = "",
