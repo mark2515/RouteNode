@@ -22,3 +22,7 @@ local.properties
 
 # Logs
 *.log
+
+# Documentation (local reference only)
+DATABASE_INTERACTIONS.md
+SAVE_BUTTON_LOCATIONS.md

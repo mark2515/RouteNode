@@ -12,45 +12,24 @@ class RouteRepository(
 ) {
     private val publicRoutesCollection = db.collection("routes_public")
     private val userRoutesCollection = db.collection("user")
-    private val favroitesCollection = db.collection("favorites")
+    private val favoritesCollection = db.collection("favorites")
 
-
-    private fun uid(): String{
+    private fun uid(): String {
         return auth.currentUser?.uid ?: throw Exception("User not logged in")
     }
 
-
-
+    // Public Routes
     suspend fun getPublicRoutes(): List<Route> {
-        return publicRoutesCollection.get().await().toObjects(Route::class.java)
-    }
-
-    suspend fun getUserRoutes(uid: String): List<Route> {
-        return userRoutesCollection
-            .document(uid)
-            .collection("routes")
-            .get()
-            .await()
-            .toObjects(Route::class.java)
-    }
-
-//    suspend fun saveRoute(uid: String, route: Route){
-//        userRoutesCollection.document(uid)
-//            .collection("routes")
-//            .add(route)
-//            .await()
-//    }
-    fun saveRoute(route: Route, callback: (Boolean, String?) -> Unit) {
-        publicRoutesCollection
-            .add(route)
-            .addOnSuccessListener { doc ->
-                Log.d("ROUTE_REPO", "Saved route: ${doc.id}")
-                callback(true, doc.id)
-            }
-            .addOnFailureListener { e ->
-                Log.e("ROUTE_REPO", "Error saving route", e)
-                callback(false, null)
-            }
+        return try {
+            publicRoutesCollection
+                .whereEqualTo("isPublic", true)
+                .get()
+                .await()
+                .toObjects(Route::class.java)
+        } catch (e: Exception) {
+            Log.e("ROUTE_REPO", "Error getting public routes", e)
+            emptyList()
+        }
     }
 
     fun getPublicRoutes(callback: (List<Route>) -> Unit) {
@@ -61,25 +40,186 @@ class RouteRepository(
                 val routes = snapshot.toObjects(Route::class.java)
                 callback(routes)
             }
-            .addOnFailureListener {
+            .addOnFailureListener { e ->
+                Log.e("ROUTE_REPO", "Error getting public routes", e)
                 callback(emptyList())
             }
     }
 
-    suspend fun saveFavorite(uid: String, route: Route){
-        db.collection("favorites")
-            .document(uid)
-            .collection("routes")
-            .document(route.id)
-            .set(route)
-            .await()
+    // Save route to public collection
+    fun saveRoute(route: Route, callback: (Boolean, String?) -> Unit) {
+        val currentUid = try {
+            uid()
+        } catch (e: Exception) {
+            Log.e("ROUTE_REPO", "User not logged in", e)
+            callback(false, null)
+            return
+        }
+
+        val routeWithCreator = route.copy(creatorId = currentUid)
+        publicRoutesCollection
+            .add(routeWithCreator)
+            .addOnSuccessListener { doc ->
+                Log.d("ROUTE_REPO", "Saved route: ${doc.id}")
+                callback(true, doc.id)
+            }
+            .addOnFailureListener { e ->
+                Log.e("ROUTE_REPO", "Error saving route", e)
+                callback(false, null)
+            }
     }
 
-    suspend fun getFavorites(uid: String): List<Route> {
-        return favroitesCollection.document(uid)
-            .collection("routes")
-            .get()
-            .await()
-            .toObjects(Route::class.java)
+    // Save route to user's personal collection
+    suspend fun saveUserRoute(route: Route): String? {
+        return try {
+            val currentUid = uid()
+            val routeWithCreator = route.copy(creatorId = currentUid)
+            val docRef = userRoutesCollection
+                .document(currentUid)
+                .collection("routes")
+                .add(routeWithCreator)
+                .await()
+            Log.d("ROUTE_REPO", "Saved user route: ${docRef.id}")
+            docRef.id
+        } catch (e: Exception) {
+            Log.e("ROUTE_REPO", "Error saving user route", e)
+            null
+        }
+    }
+
+    suspend fun getUserRoutes(uid: String? = null): List<Route> {
+        return try {
+            val targetUid = uid ?: uid()
+            userRoutesCollection
+                .document(targetUid)
+                .collection("routes")
+                .get()
+                .await()
+                .toObjects(Route::class.java)
+        } catch (e: Exception) {
+            Log.e("ROUTE_REPO", "Error getting user routes", e)
+            emptyList()
+        }
+    }
+
+    // Update route
+    suspend fun updateRoute(routeId: String, route: Route): Boolean {
+        return try {
+            val currentUid = uid()
+            // Check if user owns the route
+            val existingRoute = publicRoutesCollection
+                .document(routeId)
+                .get()
+                .await()
+                .toObject(Route::class.java)
+
+            if (existingRoute?.creatorId == currentUid) {
+                publicRoutesCollection
+                    .document(routeId)
+                    .set(route)
+                    .await()
+                Log.d("ROUTE_REPO", "Updated route: $routeId")
+                true
+            } else {
+                Log.e("ROUTE_REPO", "User does not own this route")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("ROUTE_REPO", "Error updating route", e)
+            false
+        }
+    }
+
+    // Delete route
+    suspend fun deleteRoute(routeId: String): Boolean {
+        return try {
+            val currentUid = uid()
+            val existingRoute = publicRoutesCollection
+                .document(routeId)
+                .get()
+                .await()
+                .toObject(Route::class.java)
+
+            if (existingRoute?.creatorId == currentUid) {
+                publicRoutesCollection
+                    .document(routeId)
+                    .delete()
+                    .await()
+                Log.d("ROUTE_REPO", "Deleted route: $routeId")
+                true
+            } else {
+                Log.e("ROUTE_REPO", "User does not own this route")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e("ROUTE_REPO", "Error deleting route", e)
+            false
+        }
+    }
+
+    // Favorites
+    suspend fun saveFavorite(route: Route): Boolean {
+        return try {
+            val currentUid = uid()
+            favoritesCollection
+                .document(currentUid)
+                .collection("routes")
+                .document(route.id)
+                .set(route)
+                .await()
+            Log.d("ROUTE_REPO", "Saved favorite: ${route.id}")
+            true
+        } catch (e: Exception) {
+            Log.e("ROUTE_REPO", "Error saving favorite", e)
+            false
+        }
+    }
+
+    suspend fun removeFavorite(routeId: String): Boolean {
+        return try {
+            val currentUid = uid()
+            favoritesCollection
+                .document(currentUid)
+                .collection("routes")
+                .document(routeId)
+                .delete()
+                .await()
+            Log.d("ROUTE_REPO", "Removed favorite: $routeId")
+            true
+        } catch (e: Exception) {
+            Log.e("ROUTE_REPO", "Error removing favorite", e)
+            false
+        }
+    }
+
+    suspend fun isFavorite(routeId: String): Boolean {
+        return try {
+            val currentUid = uid()
+            val doc = favoritesCollection
+                .document(currentUid)
+                .collection("routes")
+                .document(routeId)
+                .get()
+                .await()
+            doc.exists()
+        } catch (e: Exception) {
+            Log.e("ROUTE_REPO", "Error checking favorite", e)
+            false
+        }
+    }
+
+    suspend fun getFavorites(uid: String? = null): List<Route> {
+        return try {
+            val targetUid = uid ?: uid()
+            favoritesCollection
+                .document(targetUid)
+                .collection("routes")
+                .get()
+                .await()
+                .toObjects(Route::class.java)
+        } catch (e: Exception) {
+            Log.e("ROUTE_REPO", "Error getting favorites", e)
+            emptyList()
+        }
     }
 }
