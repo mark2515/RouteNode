@@ -9,46 +9,25 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import moe.group13.routenode.ui.account.AccountFragment
 import moe.group13.routenode.ui.FavoritesFragment
 import moe.group13.routenode.ui.SearchFragment
+import moe.group13.routenode.ui.manual.ManualSearchFragment
 import com.google.firebase.firestore.FirebaseFirestore
-import moe.group13.routenode.data.repository.RouteRepository
-import moe.group13.routenode.data.model.Route
 
 class MainActivity : AppCompatActivity() {
-//    private val db = FirebaseFirestore.getInstance()
+    private val db = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         // TEST DATABASE
-//        val testData = hashMapOf("message" to "Hello Firebase!")
-//        db.collection("test").add(testData)
-//            .addOnSuccessListener { documentReference ->
-//                Log.d("FIREBASE", "DocumentSnapshot added with ID: ${documentReference.id}")
-//            }
-//            .addOnFailureListener { e ->
-//                Log.w("FIREBASE", "Error adding document", e)
-//            }
-
-        // Testing DB
-        val repo = RouteRepository()
-        val sampleRoute = Route(
-            title = "Test Route",
-            description = "This is a testing route",
-            distanceKm = 10.0,
-            creatorId = "user123",
-            isPublic = true
-        )
-
-        repo.saveRoute( sampleRoute){ success, id ->
-            if (success) {
-                Log.d("FIREBASE", "Route saved with ID: $id")
-            } else {
-                Log.e("FIREBASE", "Failed to save route")
+        val testData = hashMapOf("message" to "Hello Firebase!")
+        db.collection("test").add(testData)
+            .addOnSuccessListener { documentReference ->
+                Log.d("FIREBASE", "DocumentSnapshot added with ID: ${documentReference.id}")
             }
-
-        }
-
+            .addOnFailureListener { e ->
+                Log.w("FIREBASE", "Error adding document", e)
+            }
 
         val viewPager = findViewById<ViewPager2>(R.id.view_pager)
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
@@ -56,7 +35,8 @@ class MainActivity : AppCompatActivity() {
         val fragments = listOf(
             SearchFragment(),
             FavoritesFragment(),
-            AccountFragment()
+            AccountFragment(),
+            ManualSearchFragment()
         )
 
         viewPager.adapter = object : FragmentStateAdapter(this) {
@@ -70,6 +50,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_search -> viewPager.currentItem = 0
                 R.id.nav_favorites -> viewPager.currentItem = 1
                 R.id.nav_account -> viewPager.currentItem = 2
+                R.id.nav_manual_search -> viewPager.currentItem = 3
             }
             true
         }
@@ -80,7 +61,9 @@ class MainActivity : AppCompatActivity() {
                 val selectedId = when (position) {
                     0 -> R.id.nav_search
                     1 -> R.id.nav_favorites
-                    else -> R.id.nav_account
+                    2 -> R.id.nav_account
+                    3 -> R.id.nav_manual_search
+                    else -> R.id.nav_search
                 }
                 if (bottomNav.selectedItemId != selectedId) {
                     bottomNav.selectedItemId = selectedId

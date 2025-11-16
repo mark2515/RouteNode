@@ -67,6 +67,14 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    // Room components
+    val room_version = "2.7.0"
+    val lifecycle_version = "2.9.1"
+    implementation("androidx.room:room-ktx:$room_version")
+    kapt("androidx.room:room-compiler:$room_version")
     implementation("com.github.bumptech.glide:glide:4.16.0")
     kapt("com.github.bumptech.glide:compiler:4.16.0")
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
+    implementation("com.google.android.libraries.places:places:4.0.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }
