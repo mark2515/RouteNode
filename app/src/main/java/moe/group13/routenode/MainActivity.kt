@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import moe.group13.routenode.ui.AccountFragment
+import moe.group13.routenode.ui.account.AccountFragment
 import moe.group13.routenode.ui.FavoritesFragment
 import moe.group13.routenode.ui.SearchFragment
 import com.google.firebase.firestore.FirebaseFirestore

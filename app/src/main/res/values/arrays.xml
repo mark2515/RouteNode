@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="theme_options">
+        <item>System Default</item>
+        <item>Light</item>
+        <item>Dark</item>
+    </string-array>
+
+    <string-array name="unit_options">
+        <item>Kilometers</item>
+        <item>Miles</item>
+    </string-array>
+</resources>
