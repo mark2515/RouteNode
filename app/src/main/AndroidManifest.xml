@@ -24,6 +24,8 @@
         </activity>
         <activity android:name=".ui.account.MyProfileActivity" />
         <activity android:name=".ui.account.SettingsActivity" />
+        <activity android:name=".ui.account.ChangePasswordActivity" />
+        <activity android:name=".ui.account.EditProfileActivity" />
     </application>
 
 </manifest>

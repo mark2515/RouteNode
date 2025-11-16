@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 
     alias(libs.plugins.google.services)
+    id("kotlin-kapt")
 
 }
 
@@ -66,4 +67,6 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    kapt("com.github.bumptech.glide:compiler:4.16.0")
 }
