@@ -1,15 +1,23 @@
-package moe.group13.routenode.ui
+package moe.group13.routenode.ui.search
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import moe.group13.routenode.R
+import moe.group13.routenode.ui.RouteNodeAdapter
 
 class SearchFragment : Fragment() {
+    
+    private lateinit var viewModel: SearchViewModel
+    
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -20,13 +28,63 @@ class SearchFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        
+        // Initialize ViewModel
+        viewModel = ViewModelProvider(this)[SearchViewModel::class.java]
+        
+        // Setup RecyclerView
         val recycler = view.findViewById<RecyclerView>(R.id.recyclerRouteNodes)
         recycler.layoutManager = LinearLayoutManager(requireContext())
-
+        
         val adapter = RouteNodeAdapter(
             mutableListOf(RouteNodeAdapter.RouteNodeData(no = 1))
         )
         recycler.adapter = adapter
+        
+        // Setup Ask AI button
+        val buttonAskAI = view.findViewById<MaterialButton>(R.id.buttonAskAI)
+        buttonAskAI.setOnClickListener {
+            askAIForAdvice()
+        }
+        
+        // Observe ViewModel
+        observeViewModel()
+    }
+    
+    private fun askAIForAdvice() {
+        // Show loading state
+        viewModel.askAIForAdvice()
+    }
+    
+    private fun observeViewModel() {
+        // Observe loading state
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            val button = view?.findViewById<MaterialButton>(R.id.buttonAskAI)
+            button?.isEnabled = !isLoading
+            button?.text = if (isLoading) "Loading..." else "Ask AI for advice !"
+        }
+        
+        // Observe AI response
+        viewModel.aiResponse.observe(viewLifecycleOwner) { response ->
+            // Show response in a dialog
+            showAIResponseDialog(response)
+        }
+        
+        // Observe errors
+        viewModel.errorMessage.observe(viewLifecycleOwner) { error ->
+            error?.let {
+                Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    
+    private fun showAIResponseDialog(response: String) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("AI Advice")
+            .setMessage(response)
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
     }
 }

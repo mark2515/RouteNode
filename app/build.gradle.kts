@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -20,6 +23,25 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Read API keys from local.properties
+        val properties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            properties.load(FileInputStream(localPropertiesFile))
+        }
+        
+        // Add BuildConfig fields for OpenAI API
+        buildConfigField(
+            "String",
+            "OPENAI_API_KEY",
+            "\"${properties.getProperty("OPENAI_API_KEY", "")}\""
+        )
+        buildConfigField(
+            "String",
+            "OPENAI_ENDPOINT",
+            "\"${properties.getProperty("OPENAI_ENDPOINT", "https://api.openai.com/v1/chat/completions")}\""
+        )
     }
 
     buildTypes {
@@ -40,6 +62,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -47,7 +70,6 @@ dependencies {
     implementation(libs.firebase.bom)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.google.firebase.firestore.ktx)
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

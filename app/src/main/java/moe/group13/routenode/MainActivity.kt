@@ -8,7 +8,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import moe.group13.routenode.ui.account.AccountFragment
 import moe.group13.routenode.ui.FavoritesFragment
-import moe.group13.routenode.ui.SearchFragment
+import moe.group13.routenode.ui.search.SearchFragment
 import moe.group13.routenode.ui.manual.ManualSearchFragment
 import com.google.firebase.firestore.FirebaseFirestore
 
