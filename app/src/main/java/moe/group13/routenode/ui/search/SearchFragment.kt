@@ -9,6 +9,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import moe.group13.routenode.R
@@ -17,6 +19,7 @@ import moe.group13.routenode.ui.RouteNodeAdapter
 class SearchFragment : Fragment() {
     
     private lateinit var viewModel: SearchViewModel
+    private lateinit var placesClient: PlacesClient
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -32,12 +35,19 @@ class SearchFragment : Fragment() {
         // Initialize ViewModel
         viewModel = ViewModelProvider(this)[SearchViewModel::class.java]
         
+        // Initialize Places SDK
+        if (!Places.isInitialized()) {
+            Places.initialize(requireContext(), getString(R.string.google_maps_key))
+        }
+        placesClient = Places.createClient(requireContext())
+        
         // Setup RecyclerView
         val recycler = view.findViewById<RecyclerView>(R.id.recyclerRouteNodes)
         recycler.layoutManager = LinearLayoutManager(requireContext())
         
         val adapter = RouteNodeAdapter(
-            mutableListOf(RouteNodeAdapter.RouteNodeData(no = 1))
+            mutableListOf(RouteNodeAdapter.RouteNodeData(no = 1)),
+            placesClient
         )
         recycler.adapter = adapter
         

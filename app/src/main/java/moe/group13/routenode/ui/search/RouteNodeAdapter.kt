@@ -2,21 +2,26 @@ package moe.group13.routenode.ui
 
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.libraries.places.api.net.PlacesClient
 import moe.group13.routenode.R
+import moe.group13.routenode.ui.search.PlacesAutoCompleteAdapter
 
 class RouteNodeAdapter(
-    private val items: MutableList<RouteNodeData>
+    private val items: MutableList<RouteNodeData>,
+    private val placesClient: PlacesClient
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private companion object {
@@ -36,7 +41,7 @@ class RouteNodeAdapter(
 
     inner class RouteNodeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val spinnerNo: Spinner = itemView.findViewById(R.id.spinnerNo)
-        val editLocation: EditText = itemView.findViewById(R.id.editLocation)
+        val editLocation: AutoCompleteTextView = itemView.findViewById(R.id.editLocation)
         val editPlace: EditText = itemView.findViewById(R.id.editPlace)
         val editDistance: EditText = itemView.findViewById(R.id.editDistance)
         val editAdditional: EditText = itemView.findViewById(R.id.editAdditionalRequirements)
@@ -115,6 +120,26 @@ class RouteNodeAdapter(
             }
         }
 
+        // Setup Google Places Autocomplete for location field
+        val autocompleteAdapter = PlacesAutoCompleteAdapter(nodeHolder.itemView.context, placesClient)
+        nodeHolder.editLocation.setAdapter(autocompleteAdapter)
+        nodeHolder.editLocation.threshold = 3
+        
+        // Handle place selection from autocomplete
+        nodeHolder.editLocation.setOnItemClickListener { parent, _, position, _ ->
+            val selectedPlace = autocompleteAdapter.getItem(position)
+            if (selectedPlace != null) {
+                val pos = nodeHolder.bindingAdapterPosition
+                if (pos != RecyclerView.NO_POSITION && pos < items.size) {
+                    // Update the location with the full address
+                    items[pos].location = selectedPlace.toString()
+                    nodeHolder.editLocation.setText(selectedPlace.toString())
+                    
+                    Log.d("RouteNodeAdapter", "Selected place: ${selectedPlace.primaryText}, ${selectedPlace.secondaryText}")
+                }
+            }
+        }
+        
         nodeHolder.editLocation.setText(item.location)
         nodeHolder.editPlace.setText(item.place)
         nodeHolder.editDistance.setText(item.distance)
@@ -237,8 +262,28 @@ class RouteNodeAdapter(
         editText.tag = watcher
         editText.addTextChangedListener(watcher)
     }
+    
+    private fun addTextWatcher(editText: AutoCompleteTextView, onTextChanged: (String) -> Unit) {
+        val watcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                onTextChanged(s?.toString() ?: "")
+            }
+        }
+        editText.tag = watcher
+        editText.addTextChangedListener(watcher)
+    }
 
     private fun removeTextWatcher(editText: EditText) {
+        val watcher = editText.tag as? TextWatcher
+        if (watcher != null) {
+            editText.removeTextChangedListener(watcher)
+            editText.tag = null
+        }
+    }
+    
+    private fun removeTextWatcher(editText: AutoCompleteTextView) {
         val watcher = editText.tag as? TextWatcher
         if (watcher != null) {
             editText.removeTextChangedListener(watcher)

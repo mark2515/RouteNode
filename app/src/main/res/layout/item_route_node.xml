@@ -43,7 +43,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp">
 
-            <EditText
+            <AutoCompleteTextView
                 android:id="@+id/editLocation"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -52,7 +52,9 @@
                 android:minHeight="48dp"
                 android:background="@drawable/bg_input_rect"
                 android:inputType="text"
+                android:paddingStart="8dp"
                 android:paddingEnd="8dp"
+                android:completionThreshold="3"
                 android:hint="e.g., 750 Maple Ave" />
 
             <ImageButton

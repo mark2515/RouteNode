@@ -42,6 +42,12 @@ android {
             "OPENAI_ENDPOINT",
             "\"${properties.getProperty("OPENAI_ENDPOINT", "https://api.openai.com/v1/chat/completions")}\""
         )
+        // Add resValue for Google Maps API key
+        resValue(
+            "string",
+            "google_maps_key",
+            properties.getProperty("GOOGLE_MAPS_API_KEY", "")
+        )
     }
 
     buildTypes {
