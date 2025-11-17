@@ -78,17 +78,37 @@
             android:layout_marginTop="16dp"
             android:text="The place you're looking for" />
 
-        <EditText
-            android:id="@+id/editPlace"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:minHeight="48dp"
-            android:background="@drawable/bg_input_rect"
-            android:inputType="text"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:hint="e.g., an Instagrammable café" />
+            android:layout_marginTop="8dp">
+
+            <EditText
+                android:id="@+id/editPlace"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_toStartOf="@+id/buttonMoreOptionsPlace"
+                android:minHeight="48dp"
+                android:background="@drawable/bg_input_rect"
+                android:inputType="text"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:hint="e.g., an Instagrammable café" />
+
+            <ImageButton
+                android:id="@+id/buttonMoreOptionsPlace"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:text="..."
+                android:textSize="18sp"
+                android:contentDescription="Use Common Places"
+                android:src="@android:drawable/ic_menu_more" />
+
+        </RelativeLayout>
 
         <TextView
             android:id="@+id/labelDistance"

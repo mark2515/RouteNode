@@ -49,6 +49,7 @@ class RouteNodeAdapter(
         val buttonDelete: ImageButton = itemView.findViewById(R.id.buttonDelete)
         val buttonClearAdditional: ImageButton = itemView.findViewById(R.id.buttonClearAdditional)
         val buttonMoreOptions: ImageButton = itemView.findViewById(R.id.buttonMoreOptions)
+        val buttonMoreOptionsPlace: ImageButton = itemView.findViewById(R.id.buttonMoreOptionsPlace)
     }
 
     inner class FooterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -229,7 +230,11 @@ class RouteNodeAdapter(
         }
 
         nodeHolder.buttonMoreOptions.setOnClickListener {
-            showMoreOptionsDialog(nodeHolder.itemView)
+            showMoreOptionsLocationDialog(nodeHolder.itemView)
+        }
+
+        nodeHolder.buttonMoreOptionsPlace.setOnClickListener {
+            showMoreOptionsPlaceDialog(nodeHolder.itemView)
         }
     }
 
@@ -258,10 +263,23 @@ class RouteNodeAdapter(
             .show()
     }
 
-    private fun showMoreOptionsDialog(view: View) {
+    private fun showMoreOptionsLocationDialog(view: View) {
         AlertDialog.Builder(view.context)
             .setTitle("Use Common Locations")
             .setMessage("Common Locations")
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    private fun showMoreOptionsPlaceDialog(view: View) {
+        AlertDialog.Builder(view.context)
+            .setTitle("Use Common Places")
+            .setMessage("Common Places")
             .setPositiveButton("OK") { dialog, _ ->
                 dialog.dismiss()
             }
