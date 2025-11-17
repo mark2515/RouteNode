@@ -4,7 +4,6 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
@@ -15,10 +14,10 @@ import android.widget.ImageButton
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.libraries.places.api.net.PlacesClient
 import moe.group13.routenode.R
+import moe.group13.routenode.ui.search.ClearButtonHelper
 import moe.group13.routenode.ui.search.PlacesAutoCompleteAdapter
 
 class RouteNodeAdapter(
@@ -48,6 +47,7 @@ class RouteNodeAdapter(
         val editDistance: EditText = itemView.findViewById(R.id.editDistance)
         val editAdditional: EditText = itemView.findViewById(R.id.editAdditionalRequirements)
         val buttonDelete: ImageButton = itemView.findViewById(R.id.buttonDelete)
+        val buttonClearAdditional: ImageButton = itemView.findViewById(R.id.buttonClearAdditional)
         val buttonMoreOptions: ImageButton = itemView.findViewById(R.id.buttonMoreOptions)
     }
 
@@ -142,47 +142,51 @@ class RouteNodeAdapter(
             }
         }
         
-        val updateClearIcon = {
-            val clearIcon = if (nodeHolder.editLocation.text.isNotEmpty()) {
-                ContextCompat.getDrawable(nodeHolder.itemView.context, android.R.drawable.ic_menu_close_clear_cancel)?.apply {
-                    setBounds(0, 0, intrinsicWidth, intrinsicHeight)
-                }
-            } else {
-                null
-            }
-            nodeHolder.editLocation.setCompoundDrawables(null, null, clearIcon, null)
-            nodeHolder.editLocation.compoundDrawablePadding = 8
-        }
-        
-        nodeHolder.editLocation.setOnTouchListener { v, event ->
-            if (event.action == MotionEvent.ACTION_UP) {
-                val editText = v as AutoCompleteTextView
-                val drawable = editText.compoundDrawables[2]
-                if (drawable != null) {
-                    val clickableArea = drawable.bounds.width() + editText.compoundDrawablePadding
-                    val touchX = event.x
-                    val fieldWidth = editText.width
-                    
-                    if (touchX >= fieldWidth - clickableArea - editText.paddingEnd) {
-                        editText.setText("")
-                        val pos = nodeHolder.bindingAdapterPosition
-                        if (pos != RecyclerView.NO_POSITION && pos < items.size) {
-                            items[pos].location = ""
-                        }
-                        updateClearIcon()
-                        return@setOnTouchListener true
-                    }
-                }
-            }
-            false
-        }
-        
         nodeHolder.editLocation.setText(item.location)
         nodeHolder.editPlace.setText(item.place)
         nodeHolder.editDistance.setText(item.distance)
         nodeHolder.editAdditional.setText(item.additionalRequirements)
         
-        updateClearIcon()
+        // Setup clear icons using helper
+        ClearButtonHelper.setupClearIcon(
+            nodeHolder.editLocation,
+            nodeHolder.itemView.context
+        ) {
+            val pos = nodeHolder.bindingAdapterPosition
+            if (pos != RecyclerView.NO_POSITION && pos < items.size) {
+                items[pos].location = ""
+            }
+        }
+        
+        ClearButtonHelper.setupClearIcon(
+            nodeHolder.editPlace,
+            nodeHolder.itemView.context
+        ) {
+            val pos = nodeHolder.bindingAdapterPosition
+            if (pos != RecyclerView.NO_POSITION && pos < items.size) {
+                items[pos].place = ""
+            }
+        }
+        
+        ClearButtonHelper.setupClearIcon(
+            nodeHolder.editDistance,
+            nodeHolder.itemView.context
+        ) {
+            val pos = nodeHolder.bindingAdapterPosition
+            if (pos != RecyclerView.NO_POSITION && pos < items.size) {
+                items[pos].distance = ""
+            }
+        }
+        
+        ClearButtonHelper.setupClearButton(
+            nodeHolder.editAdditional,
+            nodeHolder.buttonClearAdditional
+        ) {
+            val pos = nodeHolder.bindingAdapterPosition
+            if (pos != RecyclerView.NO_POSITION && pos < items.size) {
+                items[pos].additionalRequirements = ""
+            }
+        }
 
         removeTextWatcher(nodeHolder.editLocation)
         removeTextWatcher(nodeHolder.editPlace)
@@ -194,7 +198,6 @@ class RouteNodeAdapter(
             if (pos != RecyclerView.NO_POSITION && pos < items.size) {
                 items[pos].location = text
             }
-            updateClearIcon()
         }
         addTextWatcher(nodeHolder.editPlace) { text ->
             val pos = nodeHolder.bindingAdapterPosition

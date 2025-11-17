@@ -86,6 +86,8 @@
             android:minHeight="48dp"
             android:background="@drawable/bg_input_rect"
             android:inputType="text"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:hint="e.g., an Instagrammable café" />
 
         <TextView
@@ -103,6 +105,8 @@
             android:minHeight="48dp"
             android:background="@drawable/bg_input_rect"
             android:inputType="numberDecimal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:hint="e.g., 2 miles" />
 
         <TextView
@@ -112,16 +116,38 @@
             android:layout_marginTop="16dp"
             android:text="Additional requirements" />
 
-        <EditText
-            android:id="@+id/editAdditionalRequirements"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="top|start"
-            android:background="@drawable/bg_input_rect"
-            android:inputType="textMultiLine"
-            android:minLines="5"
-            android:hint="e.g., under $20 per person" />
+            android:layout_marginTop="8dp">
+
+            <EditText
+                android:id="@+id/editAdditionalRequirements"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top|start"
+                android:background="@drawable/bg_input_rect"
+                android:inputType="textMultiLine"
+                android:minLines="5"
+                android:paddingStart="8dp"
+                android:paddingEnd="48dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:hint="e.g., under $20 per person" />
+
+            <ImageButton
+                android:id="@+id/buttonClearAdditional"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="bottom|end"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Clear Additional Requirements"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:visibility="gone" />
+
+        </FrameLayout>
 
         </LinearLayout>
 
