@@ -42,11 +42,10 @@ android {
             "OPENAI_ENDPOINT",
             "\"${properties.getProperty("OPENAI_ENDPOINT", "https://api.openai.com/v1/chat/completions")}\""
         )
-        // Add resValue for Google Maps API key
-        resValue(
-            "string",
-            "google_maps_key",
-            properties.getProperty("GOOGLE_MAPS_API_KEY", "")
+        buildConfigField(
+            "String",
+            "GOOGLE_MAPS_API_KEY",
+            "\"${properties.getProperty("GOOGLE_MAPS_API_KEY")}\""
         )
     }
 
@@ -105,4 +104,5 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:19.0.0")
     implementation("com.google.android.libraries.places:places:4.0.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.google.maps.android:android-maps-utils:2.3.0")
 }

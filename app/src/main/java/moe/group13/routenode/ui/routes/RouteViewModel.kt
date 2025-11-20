@@ -172,4 +172,8 @@ class RouteViewModel(
             callback(false)
         }
     }
+    //TESTING PLACEHOLDER FUNC
+    fun deleteFavorite(route: Route){
+        //TODO: delete favorite
+    }
 }

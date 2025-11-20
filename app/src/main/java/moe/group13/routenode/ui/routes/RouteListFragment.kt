@@ -25,9 +25,15 @@ class RouteListFragment : Fragment() {
         val recyclerView = view.findViewById<RecyclerView>(R.id.routeRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        val adapter = RouteAdapter(emptyList()){ route ->
-            // Handle route click
-        }
+        val adapter = RouteAdapter(
+            emptyList(),
+            onClick = { route ->
+                // Handle route click
+            },
+            onMenuClick = { route, view ->
+                // Handle menu click (popup menu)
+            }
+        )
         recyclerView.adapter = adapter
 
         viewModel.publicRoutes.observe(viewLifecycleOwner) {
