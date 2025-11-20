@@ -57,14 +57,25 @@ class RouteRepository(
         }
 
         val routeWithCreator = route.copy(creatorId = currentUid)
+        Log.d("ROUTE_REPO", "Attempting to save route to Firebase:")
+        Log.d("ROUTE_REPO", "  Collection: routes_public")
+        Log.d("ROUTE_REPO", "  Title: ${routeWithCreator.title}")
+        Log.d("ROUTE_REPO", "  Creator ID: $currentUid")
+        Log.d("ROUTE_REPO", "  Distance: ${routeWithCreator.distanceKm} km")
+        Log.d("ROUTE_REPO", "  Is Public: ${routeWithCreator.isPublic}")
+        
         publicRoutesCollection
             .add(routeWithCreator)
             .addOnSuccessListener { doc ->
-                Log.d("ROUTE_REPO", "Saved route: ${doc.id}")
+                Log.d("ROUTE_REPO", "SUCCESS: Route saved to Firebase!")
+                Log.d("ROUTE_REPO", "  Document ID: ${doc.id}")
+                Log.d("ROUTE_REPO", "  Collection path: routes_public/${doc.id}")
+                Log.d("ROUTE_REPO", "  Check Firebase Console > Firestore > routes_public collection")
                 callback(true, doc.id)
             }
             .addOnFailureListener { e ->
-                Log.e("ROUTE_REPO", "Error saving route", e)
+                Log.e("ROUTE_REPO", "ERROR: Failed to save route to Firebase", e)
+                Log.e("ROUTE_REPO", "Error details: ${e.message}")
                 callback(false, null)
             }
     }
@@ -74,15 +85,24 @@ class RouteRepository(
         return try {
             val currentUid = uid()
             val routeWithCreator = route.copy(creatorId = currentUid)
+            Log.d("ROUTE_REPO", "Attempting to save private route to Firebase:")
+            Log.d("ROUTE_REPO", "  Collection: user/$currentUid/routes")
+            Log.d("ROUTE_REPO", "  Title: ${routeWithCreator.title}")
+            Log.d("ROUTE_REPO", "  Distance: ${routeWithCreator.distanceKm} km")
+            
             val docRef = userRoutesCollection
                 .document(currentUid)
                 .collection("routes")
                 .add(routeWithCreator)
                 .await()
-            Log.d("ROUTE_REPO", "Saved user route: ${docRef.id}")
+            Log.d("ROUTE_REPO", "SUCCESS: Private route saved to Firebase!")
+            Log.d("ROUTE_REPO", "  Document ID: ${docRef.id}")
+            Log.d("ROUTE_REPO", "  Collection path: user/$currentUid/routes/${docRef.id}")
+            Log.d("ROUTE_REPO", "  Check Firebase Console > Firestore > user collection")
             docRef.id
         } catch (e: Exception) {
-            Log.e("ROUTE_REPO", "Error saving user route", e)
+            Log.e("ROUTE_REPO", "ERROR: Failed to save private route to Firebase", e)
+            Log.e("ROUTE_REPO", "Error details: ${e.message}")
             null
         }
     }

@@ -3,6 +3,7 @@ package moe.group13.routenode
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -24,18 +25,19 @@ class MainActivity : AppCompatActivity() {
         val viewPager = findViewById<ViewPager2>(R.id.view_pager)
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
 
-        val fragments = listOf(
-            SearchFragment(),
-            FavoritesFragment(),
-            AccountFragment(),
-            ManualSearchFragment()
-        )
-
         viewPager.adapter = object : FragmentStateAdapter(this) {
-            override fun getItemCount(): Int = fragments.size
-            override fun createFragment(position: Int) = fragments[position]
+            override fun getItemCount(): Int = 4
+            override fun createFragment(position: Int): Fragment {
+                return when (position) {
+                    0 -> SearchFragment()
+                    1 -> FavoritesFragment()
+                    2 -> AccountFragment()
+                    3 -> ManualSearchFragment()
+                    else -> SearchFragment()
+                }
+            }
         }
-        viewPager.offscreenPageLimit = fragments.size
+        viewPager.offscreenPageLimit = 4
 
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {

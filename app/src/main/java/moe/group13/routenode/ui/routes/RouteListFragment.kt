@@ -27,7 +27,7 @@ class RouteListFragment : Fragment() {
 
         val adapter = RouteAdapter(
             emptyList(),
-            onRouteClick = { route ->
+            onClick = { route ->
                 // Navigate to route details
                 navigateToRouteDetails(route)
             },

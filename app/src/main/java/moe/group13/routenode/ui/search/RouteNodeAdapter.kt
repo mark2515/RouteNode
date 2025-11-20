@@ -248,6 +248,10 @@ class RouteNodeAdapter(
         items.add(RouteNodeData(no = items.size + 1))
         notifyDataSetChanged()
     }
+    
+    fun getItems(): List<RouteNodeData> {
+        return items.toList()
+    }
 
     private fun showDeleteConfirmationDialog(view: View, position: Int, nodeNo: Int) {
         AlertDialog.Builder(view.context)

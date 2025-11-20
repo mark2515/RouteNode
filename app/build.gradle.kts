@@ -46,7 +46,7 @@ android {
         resValue(
             "string",
             "google_maps_key",
-            properties.getProperty("GOOGLE_MAPS_API_KEY", "")
+            properties.getProperty("MAPS_API_KEY", "")
         )
     }
 

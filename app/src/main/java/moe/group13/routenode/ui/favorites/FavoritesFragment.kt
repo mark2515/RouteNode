@@ -38,8 +38,8 @@ class FavoritesFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         adapter = RouteAdapter(
             emptyList(),
-            onRouteClick = { route ->
-                // Handle route click - could navigate to route details
+            onClick = { route ->
+                // Handle route click - navigate to route details
                 onRouteClick(route)
             },
             onFavoriteClick = { route ->
@@ -73,7 +73,11 @@ class FavoritesFragment : Fragment() {
         }
 
         // Load favorites when fragment is created
-        viewModel.loadFavorites()
+        try {
+            viewModel.loadFavorites()
+        } catch (e: Exception) {
+            android.util.Log.e("FavoritesFragment", "Error loading favorites on create", e)
+        }
     }
 
     private fun updateEmptyState(isEmpty: Boolean) {

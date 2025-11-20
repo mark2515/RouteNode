@@ -15,6 +15,7 @@ import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.GeoPoint
 import moe.group13.routenode.R
 import moe.group13.routenode.data.model.Route
@@ -25,7 +26,7 @@ class SearchFragment : Fragment() {
     
     private lateinit var viewModel: SearchViewModel
     private val routeViewModel: RouteViewModel by viewModels()
-    private lateinit var placesClient: PlacesClient
+    private var placesClient: PlacesClient? = null
     private lateinit var adapter: RouteNodeAdapter
     
     override fun onCreateView(
@@ -43,20 +44,72 @@ class SearchFragment : Fragment() {
         viewModel = ViewModelProvider(this)[SearchViewModel::class.java]
         
         // Initialize Places SDK
-        if (!Places.isInitialized()) {
-            Places.initialize(requireContext(), getString(R.string.google_maps_key))
+        // Note: This requires a Google Maps API key with Places API enabled
+        // The key should be in res/values/google_maps_api.xml (not the Firebase key from google-services.json)
+        try {
+            val apiKey = getString(R.string.google_maps_key)
+            android.util.Log.d("SearchFragment", "Attempting to initialize Places SDK")
+            
+            if (!Places.isInitialized()) {
+                if (apiKey.isNotBlank() && apiKey != "YOUR_API_KEY_HERE") {
+                    try {
+                        Places.initialize(requireContext(), apiKey)
+                        android.util.Log.d("SearchFragment", "Places SDK initialized successfully")
+                    } catch (initException: Exception) {
+                        android.util.Log.e("SearchFragment", "Places.initialize() failed: ${initException.message}", initException)
+                        placesClient = null
+                    }
+                } else {
+                    android.util.Log.w("SearchFragment", "Google Maps API key is empty or placeholder")
+                    placesClient = null
+                }
+            }
+            
+            // Verify Places is initialized before creating client
+            if (Places.isInitialized() && placesClient == null) {
+                try {
+                    placesClient = Places.createClient(requireContext())
+                    android.util.Log.d("SearchFragment", "Places client created successfully")
+                } catch (clientException: Exception) {
+                    android.util.Log.e("SearchFragment", "Failed to create Places client: ${clientException.message}", clientException)
+                    placesClient = null
+                }
+            } else if (!Places.isInitialized()) {
+                android.util.Log.e("SearchFragment", "Places not initialized - cannot create client")
+                placesClient = null
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("SearchFragment", "Unexpected error in Places SDK setup: ${e.message}", e)
+            placesClient = null
         }
-        placesClient = Places.createClient(requireContext())
         
         // Setup RecyclerView
         val recycler = view.findViewById<RecyclerView>(R.id.recyclerRouteNodes)
         recycler.layoutManager = LinearLayoutManager(requireContext())
         
-        adapter = RouteNodeAdapter(
-            mutableListOf(RouteNodeAdapter.RouteNodeData(no = 1)),
-            placesClient
-        )
-        recycler.adapter = adapter
+        // Only create adapter if Places client is available
+        if (placesClient != null) {
+            try {
+                adapter = RouteNodeAdapter(
+                    mutableListOf(RouteNodeAdapter.RouteNodeData(no = 1)),
+                    placesClient!!
+                )
+                recycler.adapter = adapter
+            } catch (e: Exception) {
+                android.util.Log.e("SearchFragment", "Error creating RouteNodeAdapter", e)
+                Toast.makeText(requireContext(), "Error setting up route editor", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            android.util.Log.w("SearchFragment", "Places client is null - route editor will not be available")
+            // Show a message but don't crash - user can still use other features
+            val errorView = android.widget.TextView(requireContext()).apply {
+                text = "Location services unavailable.\nPlease configure Google Maps API key in local.properties"
+                gravity = android.view.Gravity.CENTER
+                setPadding(32, 32, 32, 32)
+            }
+            recycler.visibility = View.GONE
+            // Could add errorView to parent layout if needed
+        }
         
         // Setup Ask AI button
         val buttonAskAI = view.findViewById<MaterialButton>(R.id.buttonAskAI)
@@ -66,7 +119,7 @@ class SearchFragment : Fragment() {
         
         // Setup Save Route button
         val buttonSaveRoute = view.findViewById<MaterialButton>(R.id.buttonSaveRoute)
-        buttonSaveRoute.setOnClickListener {
+        buttonSaveRoute?.setOnClickListener {
             saveRoute()
         }
         
@@ -74,7 +127,11 @@ class SearchFragment : Fragment() {
         observeViewModel()
         
         // Observe RouteViewModel for save route feedback
-        observeRouteViewModel()
+        try {
+            observeRouteViewModel()
+        } catch (e: Exception) {
+            android.util.Log.e("SearchFragment", "Error setting up RouteViewModel observer", e)
+        }
     }
     
     private fun askAIForAdvice() {
@@ -115,12 +172,28 @@ class SearchFragment : Fragment() {
     }
     
     private fun saveRoute() {
+        // Check if adapter is initialized
+        if (!::adapter.isInitialized) {
+            Toast.makeText(requireContext(), "Route adapter not ready", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        // Check if user is logged in
+        val auth = FirebaseAuth.getInstance()
+        if (auth.currentUser == null) {
+            Toast.makeText(requireContext(), "Please log in to save routes", Toast.LENGTH_LONG).show()
+            android.util.Log.w("SearchFragment", "User not logged in - cannot save route")
+            return
+        }
+        
         // Validate route has at least 2 waypoints with locations
-        val validNodes = adapter.items.filter { it.location.isNotBlank() }
+        val validNodes = adapter.getItems().filter { it.location.isNotBlank() }
         if (validNodes.size < 2) {
             Toast.makeText(requireContext(), "Please add at least 2 locations to save a route", Toast.LENGTH_SHORT).show()
             return
         }
+        
+        android.util.Log.d("SearchFragment", "Preparing to save route with ${validNodes.size} waypoints")
         
         // Show dialog to get route name and visibility
         val routeNameInput = EditText(requireContext())
@@ -133,12 +206,16 @@ class SearchFragment : Fragment() {
                 val routeName = routeNameInput.text.toString().takeIf { it.isNotBlank() } 
                     ?: "Route ${System.currentTimeMillis()}"
                 val route = createRouteFromNodes(routeName, validNodes, isPublic = true)
+                android.util.Log.d("SearchFragment", "Saving public route: $routeName")
+                android.util.Log.d("SearchFragment", "Route data: title=${route.title}, distance=${route.distanceKm}, waypoints=${route.waypoints.size}")
                 routeViewModel.saveRoute(route, isPublic = true)
             }
             .setNeutralButton("Save as Private") { _, _ ->
                 val routeName = routeNameInput.text.toString().takeIf { it.isNotBlank() } 
                     ?: "Route ${System.currentTimeMillis()}"
                 val route = createRouteFromNodes(routeName, validNodes, isPublic = false)
+                android.util.Log.d("SearchFragment", "Saving private route: $routeName")
+                android.util.Log.d("SearchFragment", "Route data: title=${route.title}, distance=${route.distanceKm}, waypoints=${route.waypoints.size}")
                 routeViewModel.saveRoute(route, isPublic = false)
             }
             .setNegativeButton("Cancel", null)
@@ -187,7 +264,8 @@ class SearchFragment : Fragment() {
         
         routeViewModel.saveSuccess.observe(viewLifecycleOwner) { success ->
             if (success) {
-                Toast.makeText(requireContext(), "Route saved successfully!", Toast.LENGTH_SHORT).show()
+                android.util.Log.d("SearchFragment", "Route saved successfully to Firebase!")
+                Toast.makeText(requireContext(), "Route saved successfully! Check Firebase console to verify.", Toast.LENGTH_LONG).show()
                 routeViewModel.saveSuccess.value = false // Reset
             }
         }
