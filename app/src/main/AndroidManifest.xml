@@ -28,6 +28,7 @@
         <activity android:name=".ui.account.SettingsActivity" />
         <activity android:name=".ui.account.ChangePasswordActivity" />
         <activity android:name=".ui.account.EditProfileActivity" />
+        <activity android:name=".ui.routes.RouteDetailsActivity" />
     </application>
 
 </manifest>

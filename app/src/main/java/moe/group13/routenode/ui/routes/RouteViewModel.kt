@@ -16,6 +16,7 @@ class RouteViewModel(
     val favorites = MutableLiveData<List<Route>>()
     val isLoading = MutableLiveData<Boolean>(false)
     val errorMessage = MutableLiveData<String?>()
+    val saveSuccess = MutableLiveData<Boolean>(false)
 
     fun loadPublicRoutes() = viewModelScope.launch {
         try {
@@ -57,10 +58,12 @@ class RouteViewModel(
         try {
             isLoading.value = true
             errorMessage.value = null
+            saveSuccess.value = false
             if (isPublic) {
                 repo.saveRoute(route) { success, id ->
                     if (success) {
                         loadPublicRoutes()
+                        saveSuccess.postValue(true)
                     } else {
                         errorMessage.postValue("Failed to save route")
                     }
@@ -70,6 +73,7 @@ class RouteViewModel(
                 val id = repo.saveUserRoute(route)
                 if (id != null) {
                     loadUserRoutes()
+                    saveSuccess.value = true
                 } else {
                     errorMessage.value = "Failed to save route"
                 }

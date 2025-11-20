@@ -19,15 +19,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // TEST DATABASE
-        val testData = hashMapOf("message" to "Hello Firebase!")
-        db.collection("test").add(testData)
-            .addOnSuccessListener { documentReference ->
-                Log.d("FIREBASE", "DocumentSnapshot added with ID: ${documentReference.id}")
-            }
-            .addOnFailureListener { e ->
-                Log.w("FIREBASE", "Error adding document", e)
-            }
+        // DB check needed
 
         val viewPager = findViewById<ViewPager2>(R.id.view_pager)
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)

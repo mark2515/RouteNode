@@ -36,10 +36,21 @@ class FavoritesFragment : Fragment() {
         progressBar = view.findViewById(R.id.favoritesProgressBar)
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        adapter = RouteAdapter(emptyList()) { route ->
-            // Handle route click - could navigate to route details
-            onRouteClick(route)
-        }
+        adapter = RouteAdapter(
+            emptyList(),
+            onRouteClick = { route ->
+                // Handle route click - could navigate to route details
+                onRouteClick(route)
+            },
+            onFavoriteClick = { route ->
+                // Remove from favorites when favorite button clicked
+                viewModel.toggleFavorite(route)
+            },
+            isFavorite = { routeId ->
+                // All routes in favorites fragment are favorited
+                true
+            }
+        )
         recyclerView.adapter = adapter
 
         // Observe favorites
@@ -77,9 +88,13 @@ class FavoritesFragment : Fragment() {
     }
 
     private fun onRouteClick(route: Route) {
-        // Handle route click - could navigate to route details screen
-        // For now, just toggle favorite as an example
-        viewModel.toggleFavorite(route)
+        // Navigate to route details screen
+        val intent = android.content.Intent(requireContext(), moe.group13.routenode.ui.routes.RouteDetailsActivity::class.java)
+        intent.putExtra("route_id", route.id)
+        intent.putExtra("route_title", route.title)
+        intent.putExtra("route_description", route.description)
+        intent.putExtra("route_distance", route.distanceKm)
+        startActivity(intent)
     }
 
     override fun onResume() {
