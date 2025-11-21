@@ -13,7 +13,6 @@ import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.material.button.MaterialButton
 import moe.group13.routenode.R
-import moe.group13.routenode.ui.RouteNodeAdapter
 
 class SearchFragment : Fragment() {
     
