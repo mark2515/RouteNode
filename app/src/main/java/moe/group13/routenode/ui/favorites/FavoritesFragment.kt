@@ -58,10 +58,12 @@ class FavoritesFragment : Fragment() {
 
         // TODO: uncomment for testing
         // Observe favorite
+            /*
         viewModel.favorites.observe(viewLifecycleOwner) { routes ->
             adapter.update(routes)
             updateEmptyState(routes.isEmpty())
         }
+             */
         // Observe loading state
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE

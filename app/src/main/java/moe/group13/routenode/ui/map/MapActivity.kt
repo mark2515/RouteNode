@@ -18,25 +18,27 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import moe.group13.routenode.BuildConfig
 import moe.group13.routenode.R
-import okhttp3.Call
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Callback
-import okhttp3.Response
-import org.json.JSONObject
-import java.io.IOException
 import android.view.MenuItem
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Spinner
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.maps.model.PolylineOptions
-import com.google.android.gms.maps.model.Polyline
-import com.google.maps.android.PolyUtil
-
-
 
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var googleMap: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var mapViewModel: MapViewModel
+    // for later, to take a list from the favorites fragment
+    private var destinations: List<LatLng> = emptyList()
+    //testing purposes
+    //private var destinationLatLng: LatLng? = null
+    private var userLatLng: LatLng? = null
+    //default mode for directions
+    private var mode = "walking"
 
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
@@ -45,38 +47,120 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_map)
+        //setup Spinner
+        setupModeSpinner()
 
         //back arrow
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
+        //init fusedLocation
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
+        //init ViewModel
+        mapViewModel = ViewModelProvider(this)[MapViewModel::class.java]
+        observeViewModel()
+        //pulling data from intent, not being done yet
+        val latitudes: DoubleArray = intent.getDoubleArrayExtra("latitudes") ?: doubleArrayOf()
+        val longitudes: DoubleArray = intent.getDoubleArrayExtra("longitudes") ?: doubleArrayOf()
+        if (latitudes.size == longitudes.size) {
+            destinations = latitudes.indices.map { i ->
+                LatLng(latitudes[i], longitudes[i])
+            }
+        } else {
+            Toast.makeText(this, "Latitude/Longitude arrays mismatch", Toast.LENGTH_SHORT).show()
+        }
+        //TODO: Hardcoded testing fragments
+        destinations = listOf(
+            LatLng(49.2781, -122.9199), // SFU
+            LatLng(49.3043, -123.1443)  // Stanley Park
+        )
         // Map Frag
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map_fragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
     }
 
+    private fun observeViewModel(){
+        mapViewModel.polylinePoints.observe(this){
+            path -> if (::googleMap.isInitialized){
+                googleMap.addPolyline(
+                    PolylineOptions()
+                        .addAll(path)
+                        .width(10f)
+                        .color(android.graphics.Color.GREEN)
+                )
+            googleMap.addMarker(
+                MarkerOptions()
+                .position(path.last())
+                .title("Destination"))
+            }
+        }
+        mapViewModel.instructionsText.observe(this){ text ->
+            findViewById<TextView>(R.id.directions_text).text = text
+        }
+        mapViewModel.errorMessage.observe(this){msg ->
+            msg?.let{Toast.makeText(this,it,Toast.LENGTH_SHORT).show()}
+        }
+    }
+    //populate the spinner in activity_map.xml}
+    private fun setupModeSpinner(){
+        val spinner = findViewById<Spinner>(R.id.mode_spinner)
+        val modes = listOf("Walking","Driving", "Public Transit")
+        val adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_dropdown_item,
+            modes)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinner.adapter = adapter
+        // set a listener
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                mode = when (modes[position]) {
+                    "Walking" -> "walking"
+                    "Driving" -> "driving"
+                    "Public Transit" -> "transit"
+                    else -> "walking"
+                }
+                // change the directions on change
+                if(userLatLng != null && destinations.isNotEmpty()){
+                    //transit only supports one destination
+                    if(mode == "transit")
+                    mapViewModel.fetchDirections(
+                        userLatLng!!,
+                        destinations[0],
+                        emptyList(),
+                        BuildConfig.GOOGLE_MAPS_API_KEY,
+                        mode
+                    )else{
+                        val origin = userLatLng
+                        val destination = destinations.last()
+                        val waypoints = destinations.dropLast(1)
+                        mapViewModel.fetchDirections(
+                            origin,
+                            destination,
+                            waypoints,
+                            BuildConfig.GOOGLE_MAPS_API_KEY,
+                            mode
+                        )
+                    }
+                }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+            }
+        }
+    }
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
-
         // Enable basic UI
         googleMap.uiSettings.isZoomControlsEnabled = true
-
         // Check for location permission
         requestLocationPermission()
-
-        // grab routeLatitude
-        val destLat = intent.getDoubleExtra("dest_lat", Double.NaN)
-        val destLng = intent.getDoubleExtra("dest_lng", Double.NaN)
-        if (!destLat.isNaN() && !destLng.isNaN()) {
-            val destination = LatLng(destLat, destLng)
-            googleMap.addMarker(MarkerOptions().position(destination).title("Destination"))
-        }
-
-
-
     }
+
     // Closes MapActivity and goes back to MainActivity with backarrow
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
@@ -112,15 +196,29 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
             if (location != null) {
                 val currentLatLng = LatLng(location.latitude, location.longitude)
+                userLatLng = currentLatLng
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 14f))
-                //TESTING:
-                fetchDirections(
-                    originLat = location.latitude,
-                    originLng = location.longitude,
-                    destLat = 49.3043,
-                    destLng = -123.1443,
-                    apiKey = BuildConfig.GOOGLE_MAPS_API_KEY
-                )
+                //TESTING: Stanley park
+                //val testDestination = LatLng(49.3043, -123.1443)
+
+                //SFU
+                //val testDestination = LatLng(49.2781, -122.9199)
+                //destinationLatLng = testDestination
+
+
+                //prep if everything is valid
+                if(userLatLng != null && destinations.isNotEmpty()){
+                    // Directions API: If we have route to A -> B -> C -> D
+                    // A is origin, B,C, are waypoints (inbetween) and D is destination
+                    val origin = userLatLng
+                    val destination = destinations.last()
+                    val waypoints = destinations.dropLast(1)
+                    mapViewModel.fetchDirections(
+                        origin,
+                        destination,
+                        waypoints,
+                        BuildConfig.GOOGLE_MAPS_API_KEY,mode)
+                }
 
             } else {
                 Toast.makeText(this, "Unable to get current location", Toast.LENGTH_SHORT).show()
@@ -141,57 +239,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
             }
         }
-    }
-
-    //make a call to google directions api, needs lat and lng for the origin and destination
-    fun fetchDirections(originLat: Double, originLng: Double, destLat: Double, destLng: Double, apiKey: String) {
-        val url = "https://maps.googleapis.com/maps/api/directions/json?" +
-                "origin=$originLat,$originLng&destination=$destLat,$destLng&key=$apiKey"
-
-        val client = OkHttpClient()
-        val request = Request.Builder().url(url).build()
-        client.newCall(request).enqueue(object: Callback{
-            override fun onFailure(call: Call, e: IOException){
-                e.printStackTrace()
-            }
-            override fun onResponse(call: Call, response: Response){
-                val body = response.body?.string() ?: return
-                val json = JSONObject(body)
-                val routes = json.getJSONArray("routes")
-                if (routes.length() == 0) return
-
-
-                //poly lines
-                val overviewPolyline = routes.getJSONObject(0)
-                    .getJSONObject("overview_polyline")
-                    .getString("points")
-
-                val path: List<LatLng> = PolyUtil.decode(overviewPolyline)
-                runOnUiThread {
-                    //Draw
-                    val polyLineOptions = PolylineOptions()
-                        .addAll(path)
-                        .color(android.graphics.Color.GREEN)
-                        .width(10f)
-                    googleMap.addPolyline(polyLineOptions)
-                }
-                val legs = routes.getJSONObject(0).getJSONArray("legs")
-                val steps = legs.getJSONObject(0).getJSONArray("steps")
-                //text instructions
-                val instructions = StringBuilder()
-                for (i in 0 until steps.length()) {
-                    val step = steps.getJSONObject(i)
-                    val htmlInstruction = step.getString("html_instructions")
-                    instructions.append(android.text.Html.fromHtml(htmlInstruction))
-                    instructions.append("\n\n")
-                }
-
-                runOnUiThread {
-                    val directionsText: TextView = findViewById(R.id.directions_text)
-                    directionsText.text = instructions.toString()
-                }
-            }
-        })
     }
 
 }

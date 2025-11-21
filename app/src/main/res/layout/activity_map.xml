@@ -16,7 +16,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/directions_container"
-        app:layout_constraintHeight_percent="0.7"/>
+        app:layout_constraintHeight_percent="0.5"/>
 
     <!-- Directions -->
     <LinearLayout
@@ -29,7 +29,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHeight_percent="0.3">
+        app:layout_constraintHeight_percent="0.5">
+        <!-- Mode Selection -->
+        <Spinner
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/mode_spinner"/>
+
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent">
