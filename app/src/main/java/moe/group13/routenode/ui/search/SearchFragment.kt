@@ -74,6 +74,9 @@ class SearchFragment : Fragment() {
             val button = view?.findViewById<MaterialButton>(R.id.buttonAskAI)
             button?.isEnabled = !isLoading
             button?.text = if (isLoading) "Loading..." else "Ask AI for advice !"
+            
+            // Update loading spinner in adapter
+            routeNodeAdapter.setLoadingState(isLoading)
         }
         
         // Observe AI response

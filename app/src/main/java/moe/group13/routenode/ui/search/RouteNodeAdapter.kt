@@ -38,6 +38,7 @@ class RouteNodeAdapter(
     private var suppressSpinnerCallback: Boolean = false
 
     private var aiResponse: String? = null
+    private var isLoadingAi: Boolean = false
 
     data class RouteNodeData(
         var no: Int = 1,
@@ -61,6 +62,7 @@ class RouteNodeAdapter(
 
     inner class FooterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val addButton: View = itemView.findViewById(R.id.buttonAddNode)
+        val loadingSpinner: View = itemView.findViewById(R.id.progressBarAiLoading)
         val aiChatContainer: View = itemView.findViewById(R.id.aiFooterChatContainer)
         val aiMessage: TextView = itemView.findViewById(R.id.aiFooterMessage)
         val favoriteButton: ImageButton = itemView.findViewById(R.id.buttonFavoriteAi)
@@ -86,6 +88,9 @@ class RouteNodeAdapter(
             footer.addButton.setOnClickListener {
                 addNode(footer.itemView.context)
             }
+
+            // Show loading spinner
+            footer.loadingSpinner.visibility = if (isLoadingAi) View.VISIBLE else View.GONE
 
             val hasResponse = !aiResponse.isNullOrBlank()
             footer.aiChatContainer.visibility = if (hasResponse) View.VISIBLE else View.GONE
@@ -291,6 +296,11 @@ class RouteNodeAdapter(
 
     fun setAiResponse(response: String?) {
         aiResponse = response
+        notifyItemChanged(items.size)
+    }
+
+    fun setLoadingState(isLoading: Boolean) {
+        isLoadingAi = isLoading
         notifyItemChanged(items.size)
     }
 
