@@ -63,6 +63,7 @@ class RouteNodeAdapter(
         val addButton: View = itemView.findViewById(R.id.buttonAddNode)
         val aiChatContainer: View = itemView.findViewById(R.id.aiFooterChatContainer)
         val aiMessage: TextView = itemView.findViewById(R.id.aiFooterMessage)
+        val favoriteButton: ImageButton = itemView.findViewById(R.id.buttonFavoriteAi)
         val copyButton: ImageButton = itemView.findViewById(R.id.buttonCopyAi)
         val retryButton: ImageButton = itemView.findViewById(R.id.buttonRetryAi)
     }
@@ -92,6 +93,11 @@ class RouteNodeAdapter(
                 footer.aiMessage.text = aiResponse
             } else {
                 footer.aiMessage.text = ""
+            }
+
+            // Favorite icon
+            footer.favoriteButton.setOnClickListener {
+                // TODO: Implement favorite functionality
             }
 
             // Copy icon
