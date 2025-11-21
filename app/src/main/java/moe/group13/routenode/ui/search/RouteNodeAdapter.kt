@@ -12,6 +12,7 @@ import android.widget.AutoCompleteTextView
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
@@ -31,6 +32,8 @@ class RouteNodeAdapter(
     }
 
     private var suppressSpinnerCallback: Boolean = false
+
+    private var aiResponse: String? = null
 
     data class RouteNodeData(
         var no: Int = 1,
@@ -54,6 +57,8 @@ class RouteNodeAdapter(
 
     inner class FooterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val addButton: View = itemView.findViewById(R.id.buttonAddNode)
+        val aiChatContainer: View = itemView.findViewById(R.id.aiFooterChatContainer)
+        val aiMessage: TextView = itemView.findViewById(R.id.aiFooterMessage)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -70,8 +75,17 @@ class RouteNodeAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (getItemViewType(position) == FOOTER_VIEW_TYPE) {
             val footer = holder as FooterViewHolder
+
             footer.addButton.setOnClickListener {
                 addNode()
+            }
+
+            val hasResponse = !aiResponse.isNullOrBlank()
+            footer.aiChatContainer.visibility = if (hasResponse) View.VISIBLE else View.GONE
+            if (hasResponse) {
+                footer.aiMessage.text = aiResponse
+            } else {
+                footer.aiMessage.text = ""
             }
             return
         }
@@ -242,6 +256,11 @@ class RouteNodeAdapter(
 
     override fun getItemViewType(position: Int): Int {
         return if (position == items.size) FOOTER_VIEW_TYPE else ITEM_VIEW_TYPE
+    }
+
+    fun setAiResponse(response: String?) {
+        aiResponse = response
+        notifyItemChanged(items.size)
     }
 
     fun addNode() {

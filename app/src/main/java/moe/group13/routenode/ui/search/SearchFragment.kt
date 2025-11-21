@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import moe.group13.routenode.R
 import moe.group13.routenode.ui.RouteNodeAdapter
 
@@ -20,6 +19,7 @@ class SearchFragment : Fragment() {
     
     private lateinit var viewModel: SearchViewModel
     private lateinit var placesClient: PlacesClient
+    private lateinit var routeNodeAdapter: RouteNodeAdapter
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,11 +45,11 @@ class SearchFragment : Fragment() {
         val recycler = view.findViewById<RecyclerView>(R.id.recyclerRouteNodes)
         recycler.layoutManager = LinearLayoutManager(requireContext())
         
-        val adapter = RouteNodeAdapter(
+        routeNodeAdapter = RouteNodeAdapter(
             mutableListOf(RouteNodeAdapter.RouteNodeData(no = 1)),
             placesClient
         )
-        recycler.adapter = adapter
+        recycler.adapter = routeNodeAdapter
         
         // Setup Ask AI button
         val buttonAskAI = view.findViewById<MaterialButton>(R.id.buttonAskAI)
@@ -76,8 +76,7 @@ class SearchFragment : Fragment() {
         
         // Observe AI response
         viewModel.aiResponse.observe(viewLifecycleOwner) { response ->
-            // Show response in a dialog
-            showAIResponseDialog(response)
+            routeNodeAdapter.setAiResponse(response)
         }
         
         // Observe errors
@@ -86,15 +85,5 @@ class SearchFragment : Fragment() {
                 Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
             }
         }
-    }
-    
-    private fun showAIResponseDialog(response: String) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("AI Advice")
-            .setMessage(response)
-            .setPositiveButton("OK") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .show()
     }
 }
