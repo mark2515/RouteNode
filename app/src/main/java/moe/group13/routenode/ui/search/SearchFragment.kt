@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import moe.group13.routenode.R
 import moe.group13.routenode.ui.RouteNodeAdapter
 
@@ -20,6 +19,7 @@ class SearchFragment : Fragment() {
     
     private lateinit var viewModel: SearchViewModel
     private lateinit var placesClient: PlacesClient
+    private lateinit var routeNodeAdapter: RouteNodeAdapter
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,17 +45,29 @@ class SearchFragment : Fragment() {
         val recycler = view.findViewById<RecyclerView>(R.id.recyclerRouteNodes)
         recycler.layoutManager = LinearLayoutManager(requireContext())
         
-        val adapter = RouteNodeAdapter(
-            mutableListOf(RouteNodeAdapter.RouteNodeData(no = 1)),
-            placesClient
-        )
-        recycler.adapter = adapter
-        
         // Setup Ask AI button
         val buttonAskAI = view.findViewById<MaterialButton>(R.id.buttonAskAI)
         buttonAskAI.setOnClickListener {
-            askAIForAdvice()
+            // Check if all fields are valid
+            if (::routeNodeAdapter.isInitialized && !routeNodeAdapter.isAllFieldsValid()) {
+                // Show validation errors
+                routeNodeAdapter.showAllValidationErrors()
+                Toast.makeText(requireContext(), "Please fill in all required fields", Toast.LENGTH_SHORT).show()
+            } else {
+                askAIForAdvice()
+            }
         }
+        
+        routeNodeAdapter = RouteNodeAdapter(
+            mutableListOf(RouteNodeAdapter.RouteNodeData(no = 1)),
+            placesClient,
+            onRetryAi = {
+                askAIForAdvice()
+            },
+            onValidationChanged = { isValid ->
+            }
+        )
+        recycler.adapter = routeNodeAdapter
         
         // Observe ViewModel
         observeViewModel()
@@ -70,14 +82,17 @@ class SearchFragment : Fragment() {
         // Observe loading state
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             val button = view?.findViewById<MaterialButton>(R.id.buttonAskAI)
+            // Only disable during loading
             button?.isEnabled = !isLoading
             button?.text = if (isLoading) "Loading..." else "Ask AI for advice !"
+            
+            // Update loading spinner in adapter
+            routeNodeAdapter.setLoadingState(isLoading)
         }
         
         // Observe AI response
         viewModel.aiResponse.observe(viewLifecycleOwner) { response ->
-            // Show response in a dialog
-            showAIResponseDialog(response)
+            routeNodeAdapter.setAiResponse(response)
         }
         
         // Observe errors
@@ -86,15 +101,5 @@ class SearchFragment : Fragment() {
                 Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
             }
         }
-    }
-    
-    private fun showAIResponseDialog(response: String) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("AI Advice")
-            .setMessage(response)
-            .setPositiveButton("OK") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .show()
     }
 }

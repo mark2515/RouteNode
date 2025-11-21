@@ -1,10 +1,12 @@
 package moe.group13.routenode.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
@@ -13,17 +15,20 @@ import android.widget.AutoCompleteTextView
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.libraries.places.api.net.PlacesClient
 import moe.group13.routenode.R
+import moe.group13.routenode.ui.search.ClearButtonHelper
 import moe.group13.routenode.ui.search.PlacesAutoCompleteAdapter
 
 class RouteNodeAdapter(
     private val items: MutableList<RouteNodeData>,
-    private val placesClient: PlacesClient
+    private val placesClient: PlacesClient,
+    private val onRetryAi: () -> Unit,
+    private val onValidationChanged: ((Boolean) -> Unit)? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private companion object {
@@ -33,12 +38,16 @@ class RouteNodeAdapter(
 
     private var suppressSpinnerCallback: Boolean = false
 
+    private var aiResponse: String? = null
+    private var isLoadingAi: Boolean = false
+
     data class RouteNodeData(
         var no: Int = 1,
         var location: String = "",
         var place: String = "",
         var distance: String = "",
-        var additionalRequirements: String = ""
+        var additionalRequirements: String = "",
+        var hasTriedToSubmit: Boolean = false
     )
 
     inner class RouteNodeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -48,11 +57,22 @@ class RouteNodeAdapter(
         val editDistance: EditText = itemView.findViewById(R.id.editDistance)
         val editAdditional: EditText = itemView.findViewById(R.id.editAdditionalRequirements)
         val buttonDelete: ImageButton = itemView.findViewById(R.id.buttonDelete)
+        val buttonClearAdditional: ImageButton = itemView.findViewById(R.id.buttonClearAdditional)
         val buttonMoreOptions: ImageButton = itemView.findViewById(R.id.buttonMoreOptions)
+        val buttonMoreOptionsPlace: ImageButton = itemView.findViewById(R.id.buttonMoreOptionsPlace)
+        val errorLocation: TextView = itemView.findViewById(R.id.errorLocation)
+        val errorPlace: TextView = itemView.findViewById(R.id.errorPlace)
+        val errorDistance: TextView = itemView.findViewById(R.id.errorDistance)
     }
 
     inner class FooterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val addButton: View = itemView.findViewById(R.id.buttonAddNode)
+        val loadingSpinner: View = itemView.findViewById(R.id.progressBarAiLoading)
+        val aiChatContainer: View = itemView.findViewById(R.id.aiFooterChatContainer)
+        val aiMessage: TextView = itemView.findViewById(R.id.aiFooterMessage)
+        val favoriteButton: ImageButton = itemView.findViewById(R.id.buttonFavoriteAi)
+        val copyButton: ImageButton = itemView.findViewById(R.id.buttonCopyAi)
+        val retryButton: ImageButton = itemView.findViewById(R.id.buttonRetryAi)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -69,8 +89,44 @@ class RouteNodeAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         if (getItemViewType(position) == FOOTER_VIEW_TYPE) {
             val footer = holder as FooterViewHolder
+
             footer.addButton.setOnClickListener {
-                addNode()
+                addNode(footer.itemView.context)
+            }
+
+            // Show loading spinner
+            footer.loadingSpinner.visibility = if (isLoadingAi) View.VISIBLE else View.GONE
+
+            val hasResponse = !aiResponse.isNullOrBlank()
+            footer.aiChatContainer.visibility = if (hasResponse) View.VISIBLE else View.GONE
+            if (hasResponse) {
+                footer.aiMessage.text = aiResponse
+            } else {
+                footer.aiMessage.text = ""
+            }
+
+            // Favorite icon
+            footer.favoriteButton.setOnClickListener {
+                // TODO: Implement favorite functionality
+            }
+
+            // Copy icon
+            footer.copyButton.setOnClickListener {
+                val response = aiResponse
+                if (!response.isNullOrBlank()) {
+                    val context = footer.itemView.context
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip = ClipData.newPlainText("AI response", response)
+                    clipboard.setPrimaryClip(clip)
+                    Toast.makeText(context, context.getString(R.string.copied_to_clipboard), Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            // Retry icon
+            footer.retryButton.setOnClickListener {
+                aiResponse = null
+                notifyItemChanged(footer.bindingAdapterPosition)
+                onRetryAi()
             }
             return
         }
@@ -142,47 +198,79 @@ class RouteNodeAdapter(
             }
         }
         
-        val updateClearIcon = {
-            val clearIcon = if (nodeHolder.editLocation.text.isNotEmpty()) {
-                ContextCompat.getDrawable(nodeHolder.itemView.context, android.R.drawable.ic_menu_close_clear_cancel)?.apply {
-                    setBounds(0, 0, intrinsicWidth, intrinsicHeight)
-                }
-            } else {
-                null
-            }
-            nodeHolder.editLocation.setCompoundDrawables(null, null, clearIcon, null)
-            nodeHolder.editLocation.compoundDrawablePadding = 8
-        }
-        
-        nodeHolder.editLocation.setOnTouchListener { v, event ->
-            if (event.action == MotionEvent.ACTION_UP) {
-                val editText = v as AutoCompleteTextView
-                val drawable = editText.compoundDrawables[2]
-                if (drawable != null) {
-                    val clickableArea = drawable.bounds.width() + editText.compoundDrawablePadding
-                    val touchX = event.x
-                    val fieldWidth = editText.width
-                    
-                    if (touchX >= fieldWidth - clickableArea - editText.paddingEnd) {
-                        editText.setText("")
-                        val pos = nodeHolder.bindingAdapterPosition
-                        if (pos != RecyclerView.NO_POSITION && pos < items.size) {
-                            items[pos].location = ""
-                        }
-                        updateClearIcon()
-                        return@setOnTouchListener true
-                    }
-                }
-            }
-            false
-        }
-        
         nodeHolder.editLocation.setText(item.location)
         nodeHolder.editPlace.setText(item.place)
         nodeHolder.editDistance.setText(item.distance)
         nodeHolder.editAdditional.setText(item.additionalRequirements)
         
-        updateClearIcon()
+        if (item.hasTriedToSubmit) {
+            validateField(nodeHolder.editLocation, nodeHolder.errorLocation, "Location cannot be empty")
+            validateField(nodeHolder.editPlace, nodeHolder.errorPlace, "The place you're looking for cannot be empty")
+            validateField(nodeHolder.editDistance, nodeHolder.errorDistance, "Distance cannot be empty")
+        } else {
+            nodeHolder.errorLocation.visibility = View.GONE
+            nodeHolder.errorPlace.visibility = View.GONE
+            nodeHolder.errorDistance.visibility = View.GONE
+        }
+        
+        nodeHolder.editLocation.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                validateField(nodeHolder.editLocation, nodeHolder.errorLocation, "Location cannot be empty")
+            }
+        }
+        
+        nodeHolder.editPlace.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                validateField(nodeHolder.editPlace, nodeHolder.errorPlace, "The place you're looking for cannot be empty")
+            }
+        }
+        
+        nodeHolder.editDistance.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                validateField(nodeHolder.editDistance, nodeHolder.errorDistance, "Distance cannot be empty")
+            }
+        }
+        
+        // Setup clear icons using helper
+        ClearButtonHelper.setupClearIcon(
+            nodeHolder.editLocation,
+            nodeHolder.itemView.context
+        ) {
+            val pos = nodeHolder.bindingAdapterPosition
+            if (pos != RecyclerView.NO_POSITION && pos < items.size) {
+                items[pos].location = ""
+            }
+        }
+        
+        ClearButtonHelper.setupClearIcon(
+            nodeHolder.editPlace,
+            nodeHolder.itemView.context
+        ) {
+            val pos = nodeHolder.bindingAdapterPosition
+            if (pos != RecyclerView.NO_POSITION && pos < items.size) {
+                items[pos].place = ""
+            }
+        }
+        
+        ClearButtonHelper.setupClearIcon(
+            nodeHolder.editDistance,
+            nodeHolder.itemView.context
+        ) {
+            val pos = nodeHolder.bindingAdapterPosition
+            if (pos != RecyclerView.NO_POSITION && pos < items.size) {
+                items[pos].distance = ""
+            }
+        }
+        
+        ClearButtonHelper.setupClearButton(
+            nodeHolder.editAdditional,
+            nodeHolder.buttonClearAdditional
+        ) {
+            val pos = nodeHolder.bindingAdapterPosition
+            if (pos != RecyclerView.NO_POSITION && pos < items.size) {
+                items[pos].additionalRequirements = ""
+            }
+        }
 
         removeTextWatcher(nodeHolder.editLocation)
         removeTextWatcher(nodeHolder.editPlace)
@@ -193,19 +281,30 @@ class RouteNodeAdapter(
             val pos = nodeHolder.bindingAdapterPosition
             if (pos != RecyclerView.NO_POSITION && pos < items.size) {
                 items[pos].location = text
+                if (items[pos].hasTriedToSubmit) {
+                    validateField(nodeHolder.editLocation, nodeHolder.errorLocation, "Location cannot be empty")
+                }
+                notifyValidationChanged()
             }
-            updateClearIcon()
         }
         addTextWatcher(nodeHolder.editPlace) { text ->
             val pos = nodeHolder.bindingAdapterPosition
             if (pos != RecyclerView.NO_POSITION && pos < items.size) {
                 items[pos].place = text
+                if (items[pos].hasTriedToSubmit) {
+                    validateField(nodeHolder.editPlace, nodeHolder.errorPlace, "The place you're looking for cannot be empty")
+                }
+                notifyValidationChanged()
             }
         }
         addTextWatcher(nodeHolder.editDistance) { text ->
             val pos = nodeHolder.bindingAdapterPosition
             if (pos != RecyclerView.NO_POSITION && pos < items.size) {
                 items[pos].distance = text
+                if (items[pos].hasTriedToSubmit) {
+                    validateField(nodeHolder.editDistance, nodeHolder.errorDistance, "Distance cannot be empty")
+                }
+                notifyValidationChanged()
             }
         }
         addTextWatcher(nodeHolder.editAdditional) { text ->
@@ -226,7 +325,11 @@ class RouteNodeAdapter(
         }
 
         nodeHolder.buttonMoreOptions.setOnClickListener {
-            showMoreOptionsDialog(nodeHolder.itemView)
+            showMoreOptionsLocationDialog(nodeHolder.itemView)
+        }
+
+        nodeHolder.buttonMoreOptionsPlace.setOnClickListener {
+            showMoreOptionsPlaceDialog(nodeHolder.itemView)
         }
     }
 
@@ -236,9 +339,24 @@ class RouteNodeAdapter(
         return if (position == items.size) FOOTER_VIEW_TYPE else ITEM_VIEW_TYPE
     }
 
-    fun addNode() {
+    fun setAiResponse(response: String?) {
+        aiResponse = response
+        notifyItemChanged(items.size)
+    }
+
+    fun setLoadingState(isLoading: Boolean) {
+        isLoadingAi = isLoading
+        notifyItemChanged(items.size)
+    }
+
+    fun addNode(context: Context) {
+        if (items.size >= 5) {
+            Toast.makeText(context, "Maximum 5 Route Nodes allowed", Toast.LENGTH_SHORT).show()
+            return
+        }
         items.add(RouteNodeData(no = items.size + 1))
         notifyDataSetChanged()
+        notifyValidationChanged()
     }
 
     private fun showDeleteConfirmationDialog(view: View, position: Int, nodeNo: Int) {
@@ -255,10 +373,23 @@ class RouteNodeAdapter(
             .show()
     }
 
-    private fun showMoreOptionsDialog(view: View) {
+    private fun showMoreOptionsLocationDialog(view: View) {
         AlertDialog.Builder(view.context)
             .setTitle("Use Common Locations")
             .setMessage("Common Locations")
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    private fun showMoreOptionsPlaceDialog(view: View) {
+        AlertDialog.Builder(view.context)
+            .setTitle("Use Common Places")
+            .setMessage("Common Places")
             .setPositiveButton("OK") { dialog, _ ->
                 dialog.dismiss()
             }
@@ -289,6 +420,9 @@ class RouteNodeAdapter(
 
         // Show toast message
         Toast.makeText(context, "Route Node No. $nodeNo Deleted", Toast.LENGTH_SHORT).show()
+        
+        // Trigger validation after deletion
+        notifyValidationChanged()
     }
 
     private fun addTextWatcher(editText: EditText, onTextChanged: (String) -> Unit) {
@@ -329,5 +463,46 @@ class RouteNodeAdapter(
             editText.removeTextChangedListener(watcher)
             editText.tag = null
         }
+    }
+
+    private fun validateField(editText: EditText, errorView: TextView, errorMessage: String) {
+        val text = editText.text.toString().trim()
+        if (text.isEmpty()) {
+            errorView.text = errorMessage
+            errorView.visibility = View.VISIBLE
+        } else {
+            errorView.visibility = View.GONE
+        }
+    }
+    
+    private fun validateField(editText: AutoCompleteTextView, errorView: TextView, errorMessage: String) {
+        val text = editText.text.toString().trim()
+        if (text.isEmpty()) {
+            errorView.text = errorMessage
+            errorView.visibility = View.VISIBLE
+        } else {
+            errorView.visibility = View.GONE
+        }
+    }
+
+    fun isAllFieldsValid(): Boolean {
+        return items.all { 
+            it.location.trim().isNotEmpty() && 
+            it.place.trim().isNotEmpty() && 
+            it.distance.trim().isNotEmpty()
+        }
+    }
+
+    private fun notifyValidationChanged() {
+        onValidationChanged?.invoke(isAllFieldsValid())
+    }
+    
+    fun validateAllFields() {
+        notifyValidationChanged()
+    }
+    
+    fun showAllValidationErrors() {
+        items.forEach { it.hasTriedToSubmit = true }
+        notifyDataSetChanged()
     }
 }

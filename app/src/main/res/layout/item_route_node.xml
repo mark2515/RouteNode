@@ -72,21 +72,63 @@
         </RelativeLayout>
 
         <TextView
+            android:id="@+id/errorLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@android:color/holo_red_dark"
+            android:textSize="12sp"
+            android:visibility="gone"
+            android:text="Location cannot be empty" />
+
+        <TextView
             android:id="@+id/labelPlace"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="The place you're looking for" />
 
-        <EditText
-            android:id="@+id/editPlace"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:minHeight="48dp"
-            android:background="@drawable/bg_input_rect"
-            android:inputType="text"
-            android:hint="e.g., an Instagrammable café" />
+            android:layout_marginTop="8dp">
+
+            <EditText
+                android:id="@+id/editPlace"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_toStartOf="@+id/buttonMoreOptionsPlace"
+                android:minHeight="48dp"
+                android:background="@drawable/bg_input_rect"
+                android:inputType="text"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:hint="e.g., an Instagrammable café" />
+
+            <ImageButton
+                android:id="@+id/buttonMoreOptionsPlace"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:text="..."
+                android:textSize="18sp"
+                android:contentDescription="Use Common Places"
+                android:src="@android:drawable/ic_menu_more" />
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/errorPlace"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@android:color/holo_red_dark"
+            android:textSize="12sp"
+            android:visibility="gone"
+            android:text="The place you're looking for cannot be empty" />
 
         <TextView
             android:id="@+id/labelDistance"
@@ -103,7 +145,19 @@
             android:minHeight="48dp"
             android:background="@drawable/bg_input_rect"
             android:inputType="numberDecimal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
             android:hint="e.g., 2 miles" />
+
+        <TextView
+            android:id="@+id/errorDistance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@android:color/holo_red_dark"
+            android:textSize="12sp"
+            android:visibility="gone"
+            android:text="Distance cannot be empty" />
 
         <TextView
             android:id="@+id/labelAdditional"
@@ -112,16 +166,38 @@
             android:layout_marginTop="16dp"
             android:text="Additional requirements" />
 
-        <EditText
-            android:id="@+id/editAdditionalRequirements"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="top|start"
-            android:background="@drawable/bg_input_rect"
-            android:inputType="textMultiLine"
-            android:minLines="5"
-            android:hint="e.g., under $20 per person" />
+            android:layout_marginTop="8dp">
+
+            <EditText
+                android:id="@+id/editAdditionalRequirements"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top|start"
+                android:background="@drawable/bg_input_rect"
+                android:inputType="textMultiLine"
+                android:minLines="5"
+                android:paddingStart="8dp"
+                android:paddingEnd="48dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:hint="e.g., under $20 per person" />
+
+            <ImageButton
+                android:id="@+id/buttonClearAdditional"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="bottom|end"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Clear Additional Requirements"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:visibility="gone" />
+
+        </FrameLayout>
 
         </LinearLayout>
 
