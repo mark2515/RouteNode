@@ -84,7 +84,7 @@ class RouteNodeAdapter(
             val footer = holder as FooterViewHolder
 
             footer.addButton.setOnClickListener {
-                addNode()
+                addNode(footer.itemView.context)
             }
 
             val hasResponse = !aiResponse.isNullOrBlank()
@@ -294,7 +294,11 @@ class RouteNodeAdapter(
         notifyItemChanged(items.size)
     }
 
-    fun addNode() {
+    fun addNode(context: Context) {
+        if (items.size >= 5) {
+            Toast.makeText(context, "Maximum 5 Route Nodes allowed", Toast.LENGTH_SHORT).show()
+            return
+        }
         items.add(RouteNodeData(no = items.size + 1))
         notifyDataSetChanged()
     }
