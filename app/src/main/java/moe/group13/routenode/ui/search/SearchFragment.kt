@@ -48,7 +48,9 @@ class SearchFragment : Fragment() {
         routeNodeAdapter = RouteNodeAdapter(
             mutableListOf(RouteNodeAdapter.RouteNodeData(no = 1)),
             placesClient
-        )
+        ) {
+            askAIForAdvice()
+        }
         recycler.adapter = routeNodeAdapter
         
         // Setup Ask AI button

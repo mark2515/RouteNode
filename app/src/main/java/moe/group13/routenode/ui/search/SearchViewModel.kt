@@ -20,6 +20,7 @@ class SearchViewModel(
             try {
                 isLoading.value = true
                 errorMessage.value = null
+                aiResponse.value = ""
                 
                 val gptRequest = GptConfig.GPT_INIT.firstOrNull()
                 
@@ -47,6 +48,7 @@ class SearchViewModel(
             try {
                 isLoading.value = true
                 errorMessage.value = null
+                aiResponse.value = ""
                 
                 // Get default config
                 val defaultConfig = GptConfig.GPT_INIT.firstOrNull()

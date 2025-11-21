@@ -1,5 +1,8 @@
 package moe.group13.routenode.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -23,7 +26,8 @@ import moe.group13.routenode.ui.search.PlacesAutoCompleteAdapter
 
 class RouteNodeAdapter(
     private val items: MutableList<RouteNodeData>,
-    private val placesClient: PlacesClient
+    private val placesClient: PlacesClient,
+    private val onRetryAi: () -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private companion object {
@@ -59,6 +63,8 @@ class RouteNodeAdapter(
         val addButton: View = itemView.findViewById(R.id.buttonAddNode)
         val aiChatContainer: View = itemView.findViewById(R.id.aiFooterChatContainer)
         val aiMessage: TextView = itemView.findViewById(R.id.aiFooterMessage)
+        val copyButton: ImageButton = itemView.findViewById(R.id.buttonCopyAi)
+        val retryButton: ImageButton = itemView.findViewById(R.id.buttonRetryAi)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -86,6 +92,25 @@ class RouteNodeAdapter(
                 footer.aiMessage.text = aiResponse
             } else {
                 footer.aiMessage.text = ""
+            }
+
+            // Copy icon
+            footer.copyButton.setOnClickListener {
+                val response = aiResponse
+                if (!response.isNullOrBlank()) {
+                    val context = footer.itemView.context
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clip = ClipData.newPlainText("AI response", response)
+                    clipboard.setPrimaryClip(clip)
+                    Toast.makeText(context, context.getString(R.string.copied_to_clipboard), Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            // Retry icon
+            footer.retryButton.setOnClickListener {
+                aiResponse = null
+                notifyItemChanged(footer.bindingAdapterPosition)
+                onRetryAi()
             }
             return
         }
