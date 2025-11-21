@@ -77,8 +77,11 @@ class SearchFragment : Fragment() {
     }
     
     private fun askAIForAdvice() {
-        // Show loading state
-        viewModel.askAIForAdvice()
+        // Get the current route node data from the adapter
+        val routeNodeData = routeNodeAdapter.getRouteNodeData()
+        
+        // Call ViewModel with the actual user input data
+        viewModel.askAIForAdviceWithRouteNodes(routeNodeData)
     }
     
     private fun observeViewModel() {

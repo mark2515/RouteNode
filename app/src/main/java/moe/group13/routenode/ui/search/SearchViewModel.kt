@@ -6,9 +6,11 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import moe.group13.routenode.data.model.GptConfig
 import moe.group13.routenode.data.repository.OpenAiService
+import moe.group13.routenode.data.repository.PromptBuilder
 
 class SearchViewModel(
-    private val openAiService: OpenAiService = OpenAiService()
+    private val openAiService: OpenAiService = OpenAiService(),
+    private val promptBuilder: PromptBuilder = PromptBuilder(openAiService)
 ) : ViewModel() {
     
     val aiResponse = MutableLiveData<String>()
@@ -64,6 +66,30 @@ class SearchViewModel(
                     }
                 } else {
                     errorMessage.value = "No GPT configuration found"
+                }
+            } catch (e: Exception) {
+                errorMessage.value = "Error: ${e.message}"
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+    
+    fun askAIForAdviceWithRouteNodes(routeNodeData: List<RouteNodeAdapter.RouteNodeData>) {
+        viewModelScope.launch {
+            try {
+                isLoading.value = true
+                errorMessage.value = null
+                aiResponse.value = ""
+                
+                val result = promptBuilder.buildAndSendPromptFromAdapterData(
+                    routeNodeData = routeNodeData
+                )
+                
+                result.onSuccess { response ->
+                    aiResponse.value = response
+                }.onFailure { exception ->
+                    errorMessage.value = "Failed to get AI response: ${exception.message}"
                 }
             } catch (e: Exception) {
                 errorMessage.value = "Error: ${e.message}"

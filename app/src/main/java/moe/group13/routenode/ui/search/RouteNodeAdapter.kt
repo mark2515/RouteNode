@@ -349,4 +349,8 @@ class RouteNodeAdapter(
         items.forEach { it.hasTriedToSubmit = true }
         notifyDataSetChanged()
     }
+    
+    fun getRouteNodeData(): List<RouteNodeData> {
+        return items.toList()
+    }
 }
