@@ -26,16 +26,29 @@ data class GptResponse(
     )
 }
 
+data class GptConfigParams(
+    val model: String,
+    val temperature: Double,
+    val max_tokens: Int
+)
+
 object GptConfig {
     val OPENAI_API_KEY: String = BuildConfig.OPENAI_API_KEY
     val ENDPOINT: String = BuildConfig.OPENAI_ENDPOINT
     
+    val DEFAULT_CONFIG = GptConfigParams(
+        model = "gpt-4-turbo",
+        temperature = 0.7,
+        max_tokens = 800
+    )
+    
+    @Deprecated("Use DEFAULT_CONFIG")
     val GPT_INIT = listOf(
         GptRequest(
-            model = "gpt-4-turbo",
-            prompt = "Tell me a pizza restaurant near SFU.",
-            temperature = 0.7,
-            max_tokens = 400
+            model = DEFAULT_CONFIG.model,
+            prompt = "",  // prompts come from PromptBuilder
+            temperature = DEFAULT_CONFIG.temperature,
+            max_tokens = DEFAULT_CONFIG.max_tokens
         )
     )
 }

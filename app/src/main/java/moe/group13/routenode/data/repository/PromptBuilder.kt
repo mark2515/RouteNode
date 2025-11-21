@@ -77,8 +77,7 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
         }
         
         // Get configuration
-        val defaultConfig = GptConfig.GPT_INIT.firstOrNull()
-            ?: return Result.failure(Exception("No GPT configuration found"))
+        val defaultConfig = GptConfig.DEFAULT_CONFIG
         
         // Build the prompt
         val prompt = buildPrompt(routeNodes)
