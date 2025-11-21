@@ -74,6 +74,24 @@ class EditProfileActivity : AppCompatActivity() {
             android.R.layout.simple_spinner_dropdown_item,
             listOf("Walking", "Transit", "Driving", "Cycling")
         )
+        
+        // Apply ceiling to distance input
+        inputDistance.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val currentText = inputDistance.text.toString()
+                if (currentText.isNotEmpty()) {
+                    try {
+                        val value = currentText.toDouble()
+                        if (value > 0) {
+                            val ceiledValue = kotlin.math.ceil(value).toInt()
+                            inputDistance.setText(ceiledValue.toString())
+                        }
+                    } catch (e: NumberFormatException) {
+                        // Invalid number format, ignore
+                    }
+                }
+            }
+        }
     }
 
     private fun showCuisineDialog() {

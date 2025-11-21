@@ -166,6 +166,22 @@ class RouteNodeAdapter(
         
         nodeHolder.editDistance.setOnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
+                // Apply ceiling to the distance value
+                val currentText = nodeHolder.editDistance.text.toString()
+                if (currentText.isNotEmpty()) {
+                    try {
+                        val value = currentText.toDouble()
+                        if (value > 0) {
+                            val ceiledValue = kotlin.math.ceil(value).toInt()
+                            nodeHolder.editDistance.setText(ceiledValue.toString())
+                            val pos = nodeHolder.bindingAdapterPosition
+                            if (pos != RecyclerView.NO_POSITION && pos < items.size) {
+                                items[pos].distance = ceiledValue.toString()
+                            }
+                        }
+                    } catch (e: NumberFormatException) {
+                    }
+                }
                 RouteNodeValidationHelper.validateField(nodeHolder.editDistance, nodeHolder.errorDistance, "Distance cannot be empty")
             }
         }

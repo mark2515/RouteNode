@@ -137,17 +137,36 @@
             android:layout_marginTop="16dp"
             android:text="Distance" />
 
-        <EditText
-            android:id="@+id/editDistance"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:minHeight="48dp"
-            android:background="@drawable/bg_input_rect"
-            android:inputType="numberDecimal"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:hint="e.g., 2 miles" />
+            android:layout_marginTop="8dp">
+
+            <EditText
+                android:id="@+id/editDistance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_toStartOf="@+id/textKm"
+                android:minHeight="48dp"
+                android:background="@drawable/bg_input_rect"
+                android:inputType="numberDecimal"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:hint="e.g., 2" />
+
+            <TextView
+                android:id="@+id/textKm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:text="km"
+                android:textSize="16sp" />
+
+        </RelativeLayout>
 
         <TextView
             android:id="@+id/errorDistance"
