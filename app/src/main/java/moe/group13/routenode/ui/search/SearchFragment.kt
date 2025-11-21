@@ -53,6 +53,10 @@ class SearchFragment : Fragment() {
                 routeNodeAdapter.showAllValidationErrors()
                 Toast.makeText(requireContext(), "Please fill in all required fields", Toast.LENGTH_SHORT).show()
             } else {
+                // Scroll to the bottom of the RecyclerView
+                recycler.post {
+                    recycler.smoothScrollToPosition(routeNodeAdapter.itemCount - 1)
+                }
                 askAIForAdvice()
             }
         }
@@ -92,6 +96,11 @@ class SearchFragment : Fragment() {
         // Observe AI response
         viewModel.aiResponse.observe(viewLifecycleOwner) { response ->
             routeNodeAdapter.setAiResponse(response)
+            // Scroll to bottom when AI response is received
+            view?.findViewById<RecyclerView>(R.id.recyclerRouteNodes)?.post {
+                val recycler = view?.findViewById<RecyclerView>(R.id.recyclerRouteNodes)
+                recycler?.smoothScrollToPosition(routeNodeAdapter.itemCount - 1)
+            }
         }
         
         // Observe errors
