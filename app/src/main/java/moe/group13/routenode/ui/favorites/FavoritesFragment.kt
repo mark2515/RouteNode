@@ -51,19 +51,16 @@ class FavoritesFragment : Fragment() {
         )
         recyclerView.adapter = adapter
 
+        /*
         //TESTING
         val testRoutes = getSampleFavorites()
         adapter.update(testRoutes)
         updateEmptyState(testRoutes.isEmpty())
-
-        // TODO: uncomment for testing
-        // Observe favorite
-            /*
+        */
         viewModel.favorites.observe(viewLifecycleOwner) { routes ->
             adapter.update(routes)
             updateEmptyState(routes.isEmpty())
         }
-             */
         // Observe loading state
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
@@ -144,28 +141,6 @@ class FavoritesFragment : Fragment() {
         //TODO: Implement editing
     }
 
-    private fun getSampleFavorites(): List<Route> {
-        return listOf(
-            Route(
-                id = "route1",
-                title = "Route A",
-                description = "Description A",
-                distanceKm = 3.1
-            ),
-            Route(
-                id = "route2",
-                title = "Route B",
-                description = "Description B",
-                distanceKm = 5.4
-            ),
-            Route(
-                id = "route3",
-                title = "Route C",
-                description = "Description C",
-                distanceKm = 2.8
-            )
-        )
-    }
 
 
 

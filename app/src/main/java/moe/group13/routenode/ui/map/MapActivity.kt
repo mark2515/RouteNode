@@ -22,8 +22,12 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.Spinner
 import androidx.lifecycle.ViewModelProvider
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.PolylineOptions
 
 
@@ -32,13 +36,25 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var googleMap: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var mapViewModel: MapViewModel
+
     // for later, to take a list from the favorites fragment
     private var destinations: List<LatLng> = emptyList()
+
     //testing purposes
     //private var destinationLatLng: LatLng? = null
     private var userLatLng: LatLng? = null
+
     //default mode for directions
     private var mode = "walking"
+
+    //store userPins to save having to call fetch for toggle visibility
+    // markers are an object
+    // idea: https://developers.google.com/android/reference/com/google/android/gms/maps/model/Marker
+    private var userPins: MutableList<Marker> = mutableListOf()
+
+    //hide the pins initially
+    private var isPinsVisible = false
+    private lateinit var togglePin: Button
 
     companion object {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 1001
@@ -49,7 +65,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         setContentView(R.layout.activity_map)
         //setup Spinner
         setupModeSpinner()
-
         //back arrow
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         //init fusedLocation
@@ -58,7 +73,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         //init ViewModel
         mapViewModel = ViewModelProvider(this)[MapViewModel::class.java]
         observeViewModel()
-        //pulling data from intent, not being done yet
+        //TODO: Implement pulling data from intent, not being done yet
         val latitudes: DoubleArray = intent.getDoubleArrayExtra("latitudes") ?: doubleArrayOf()
         val longitudes: DoubleArray = intent.getDoubleArrayExtra("longitudes") ?: doubleArrayOf()
         if (latitudes.size == longitudes.size) {
@@ -77,38 +92,67 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map_fragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        // button press to toggle visibility
+        togglePin = findViewById<Button>(R.id.toggle_pins_button)
+        togglePin.setOnClickListener {
+            //if pins is visible, turn it to invisible
+            if (!isPinsVisible) {
+                //if userPins is empty: first startup
+                if (userPins.isEmpty()) {
+                    userPins.forEach { it.isVisible = true }
+                }
+                addUserPin()
+                isPinsVisible = true
+                togglePin.text = "Hide Pins"
+            }
+            //if pins is invisible, turn it visible
+            else {
+                userPins.forEach { it.isVisible = false }
+                isPinsVisible = false
+                togglePin.text = "Show Pins"
+
+            }
+        }
+
+
     }
 
-    private fun observeViewModel(){
-        mapViewModel.polylinePoints.observe(this){
-            path -> if (::googleMap.isInitialized){
+    private fun observeViewModel() {
+        mapViewModel.polylinePoints.observe(this) { path ->
+            if (::googleMap.isInitialized) {
                 googleMap.addPolyline(
                     PolylineOptions()
                         .addAll(path)
                         .width(10f)
                         .color(android.graphics.Color.GREEN)
                 )
-            googleMap.addMarker(
-                MarkerOptions()
-                .position(path.last())
-                .title("Destination"))
+                googleMap.addMarker(
+                    MarkerOptions()
+                        .position(path.last())
+                        .title("Destination")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+                )
             }
         }
-        mapViewModel.instructionsText.observe(this){ text ->
+        mapViewModel.instructionsText.observe(this) { text ->
             findViewById<TextView>(R.id.directions_text).text = text
         }
-        mapViewModel.errorMessage.observe(this){msg ->
-            msg?.let{Toast.makeText(this,it,Toast.LENGTH_SHORT).show()}
+        mapViewModel.errorMessage.observe(this) { msg ->
+            msg?.let { Toast.makeText(this, it, Toast.LENGTH_SHORT).show() }
         }
     }
+
     //populate the spinner in activity_map.xml}
-    private fun setupModeSpinner(){
+    //TODO: Possibly set user's preferred mode of transport as default
+    private fun setupModeSpinner() {
         val spinner = findViewById<Spinner>(R.id.mode_spinner)
-        val modes = listOf("Walking","Driving", "Public Transit")
+        val modes = listOf("Walking", "Driving", "Public Transit")
         val adapter = ArrayAdapter(
             this,
             android.R.layout.simple_spinner_dropdown_item,
-            modes)
+            modes
+        )
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = adapter
         // set a listener
@@ -123,19 +167,20 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                     "Walking" -> "walking"
                     "Driving" -> "driving"
                     "Public Transit" -> "transit"
+                    //TODO: Set it here
                     else -> "walking"
                 }
                 // change the directions on change
-                if(userLatLng != null && destinations.isNotEmpty()){
+                if (userLatLng != null && destinations.isNotEmpty()) {
                     //transit only supports one destination
-                    if(mode == "transit")
-                    mapViewModel.fetchDirections(
-                        userLatLng!!,
-                        destinations[0],
-                        emptyList(),
-                        BuildConfig.GOOGLE_MAPS_API_KEY,
-                        mode
-                    )else{
+                    if (mode == "transit")
+                        mapViewModel.fetchDirections(
+                            userLatLng!!,
+                            destinations[0],
+                            emptyList(),
+                            BuildConfig.GOOGLE_MAPS_API_KEY,
+                            mode
+                        ) else {
                         val origin = userLatLng
                         val destination = destinations.last()
                         val waypoints = destinations.dropLast(1)
@@ -153,12 +198,18 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
+
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
         // Enable basic UI
         googleMap.uiSettings.isZoomControlsEnabled = true
         // Check for location permission
         requestLocationPermission()
+
+
+        // add user pins
+        //colour change idea: https://www.youtube.com/watch?v=g-YnGyBdV-s
+
     }
 
     // Closes MapActivity and goes back to MainActivity with backarrow
@@ -168,6 +219,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 finish()
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -193,21 +245,17 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
         googleMap.isMyLocationEnabled = true
 
-        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+        fusedLocationClient.getCurrentLocation(
+            com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY,
+            null
+        ).addOnSuccessListener { location: Location? ->
             if (location != null) {
                 val currentLatLng = LatLng(location.latitude, location.longitude)
                 userLatLng = currentLatLng
                 googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 14f))
-                //TESTING: Stanley park
-                //val testDestination = LatLng(49.3043, -123.1443)
-
-                //SFU
-                //val testDestination = LatLng(49.2781, -122.9199)
-                //destinationLatLng = testDestination
-
 
                 //prep if everything is valid
-                if(userLatLng != null && destinations.isNotEmpty()){
+                if (userLatLng != null && destinations.isNotEmpty()) {
                     // Directions API: If we have route to A -> B -> C -> D
                     // A is origin, B,C, are waypoints (inbetween) and D is destination
                     val origin = userLatLng
@@ -217,7 +265,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                         origin,
                         destination,
                         waypoints,
-                        BuildConfig.GOOGLE_MAPS_API_KEY,mode)
+                        BuildConfig.GOOGLE_MAPS_API_KEY, mode
+                    )
                 }
 
             } else {
@@ -239,6 +288,22 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    //add using pins function
+    fun addUserPin() {
+        val pins = mapViewModel.fetchUserStarts()
+        //creation of Marker Object
+        pins.forEach { pin ->
+            val marker = googleMap.addMarker(
+                MarkerOptions()
+                    .position(pin.location)
+                    .title("${pin.destination} (${pin.userName})")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
+            )
+            userPins.add(marker!!)
+        }
+
     }
 
 }
