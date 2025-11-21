@@ -505,3 +505,4 @@ class RouteNodeAdapter(
         items.forEach { it.hasTriedToSubmit = true }
         notifyDataSetChanged()
     }
+}
