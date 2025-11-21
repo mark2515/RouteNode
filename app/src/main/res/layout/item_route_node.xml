@@ -72,6 +72,16 @@
         </RelativeLayout>
 
         <TextView
+            android:id="@+id/errorLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@android:color/holo_red_dark"
+            android:textSize="12sp"
+            android:visibility="gone"
+            android:text="Location cannot be empty" />
+
+        <TextView
             android:id="@+id/labelPlace"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -111,6 +121,16 @@
         </RelativeLayout>
 
         <TextView
+            android:id="@+id/errorPlace"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@android:color/holo_red_dark"
+            android:textSize="12sp"
+            android:visibility="gone"
+            android:text="The place you're looking for cannot be empty" />
+
+        <TextView
             android:id="@+id/labelDistance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -128,6 +148,16 @@
             android:paddingStart="8dp"
             android:paddingEnd="8dp"
             android:hint="e.g., 2 miles" />
+
+        <TextView
+            android:id="@+id/errorDistance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@android:color/holo_red_dark"
+            android:textSize="12sp"
+            android:visibility="gone"
+            android:text="Distance cannot be empty" />
 
         <TextView
             android:id="@+id/labelAdditional"

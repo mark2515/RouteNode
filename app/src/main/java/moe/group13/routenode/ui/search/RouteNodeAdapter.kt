@@ -27,7 +27,8 @@ import moe.group13.routenode.ui.search.PlacesAutoCompleteAdapter
 class RouteNodeAdapter(
     private val items: MutableList<RouteNodeData>,
     private val placesClient: PlacesClient,
-    private val onRetryAi: () -> Unit
+    private val onRetryAi: () -> Unit,
+    private val onValidationChanged: ((Boolean) -> Unit)? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private companion object {
@@ -45,7 +46,8 @@ class RouteNodeAdapter(
         var location: String = "",
         var place: String = "",
         var distance: String = "",
-        var additionalRequirements: String = ""
+        var additionalRequirements: String = "",
+        var hasTriedToSubmit: Boolean = false
     )
 
     inner class RouteNodeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -58,6 +60,9 @@ class RouteNodeAdapter(
         val buttonClearAdditional: ImageButton = itemView.findViewById(R.id.buttonClearAdditional)
         val buttonMoreOptions: ImageButton = itemView.findViewById(R.id.buttonMoreOptions)
         val buttonMoreOptionsPlace: ImageButton = itemView.findViewById(R.id.buttonMoreOptionsPlace)
+        val errorLocation: TextView = itemView.findViewById(R.id.errorLocation)
+        val errorPlace: TextView = itemView.findViewById(R.id.errorPlace)
+        val errorDistance: TextView = itemView.findViewById(R.id.errorDistance)
     }
 
     inner class FooterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -198,6 +203,34 @@ class RouteNodeAdapter(
         nodeHolder.editDistance.setText(item.distance)
         nodeHolder.editAdditional.setText(item.additionalRequirements)
         
+        if (item.hasTriedToSubmit) {
+            validateField(nodeHolder.editLocation, nodeHolder.errorLocation, "Location cannot be empty")
+            validateField(nodeHolder.editPlace, nodeHolder.errorPlace, "The place you're looking for cannot be empty")
+            validateField(nodeHolder.editDistance, nodeHolder.errorDistance, "Distance cannot be empty")
+        } else {
+            nodeHolder.errorLocation.visibility = View.GONE
+            nodeHolder.errorPlace.visibility = View.GONE
+            nodeHolder.errorDistance.visibility = View.GONE
+        }
+        
+        nodeHolder.editLocation.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                validateField(nodeHolder.editLocation, nodeHolder.errorLocation, "Location cannot be empty")
+            }
+        }
+        
+        nodeHolder.editPlace.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                validateField(nodeHolder.editPlace, nodeHolder.errorPlace, "The place you're looking for cannot be empty")
+            }
+        }
+        
+        nodeHolder.editDistance.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                validateField(nodeHolder.editDistance, nodeHolder.errorDistance, "Distance cannot be empty")
+            }
+        }
+        
         // Setup clear icons using helper
         ClearButtonHelper.setupClearIcon(
             nodeHolder.editLocation,
@@ -248,18 +281,30 @@ class RouteNodeAdapter(
             val pos = nodeHolder.bindingAdapterPosition
             if (pos != RecyclerView.NO_POSITION && pos < items.size) {
                 items[pos].location = text
+                if (items[pos].hasTriedToSubmit) {
+                    validateField(nodeHolder.editLocation, nodeHolder.errorLocation, "Location cannot be empty")
+                }
+                notifyValidationChanged()
             }
         }
         addTextWatcher(nodeHolder.editPlace) { text ->
             val pos = nodeHolder.bindingAdapterPosition
             if (pos != RecyclerView.NO_POSITION && pos < items.size) {
                 items[pos].place = text
+                if (items[pos].hasTriedToSubmit) {
+                    validateField(nodeHolder.editPlace, nodeHolder.errorPlace, "The place you're looking for cannot be empty")
+                }
+                notifyValidationChanged()
             }
         }
         addTextWatcher(nodeHolder.editDistance) { text ->
             val pos = nodeHolder.bindingAdapterPosition
             if (pos != RecyclerView.NO_POSITION && pos < items.size) {
                 items[pos].distance = text
+                if (items[pos].hasTriedToSubmit) {
+                    validateField(nodeHolder.editDistance, nodeHolder.errorDistance, "Distance cannot be empty")
+                }
+                notifyValidationChanged()
             }
         }
         addTextWatcher(nodeHolder.editAdditional) { text ->
@@ -311,6 +356,7 @@ class RouteNodeAdapter(
         }
         items.add(RouteNodeData(no = items.size + 1))
         notifyDataSetChanged()
+        notifyValidationChanged()
     }
 
     private fun showDeleteConfirmationDialog(view: View, position: Int, nodeNo: Int) {
@@ -374,6 +420,9 @@ class RouteNodeAdapter(
 
         // Show toast message
         Toast.makeText(context, "Route Node No. $nodeNo Deleted", Toast.LENGTH_SHORT).show()
+        
+        // Trigger validation after deletion
+        notifyValidationChanged()
     }
 
     private fun addTextWatcher(editText: EditText, onTextChanged: (String) -> Unit) {
@@ -415,4 +464,44 @@ class RouteNodeAdapter(
             editText.tag = null
         }
     }
-}
+
+    private fun validateField(editText: EditText, errorView: TextView, errorMessage: String) {
+        val text = editText.text.toString().trim()
+        if (text.isEmpty()) {
+            errorView.text = errorMessage
+            errorView.visibility = View.VISIBLE
+        } else {
+            errorView.visibility = View.GONE
+        }
+    }
+    
+    private fun validateField(editText: AutoCompleteTextView, errorView: TextView, errorMessage: String) {
+        val text = editText.text.toString().trim()
+        if (text.isEmpty()) {
+            errorView.text = errorMessage
+            errorView.visibility = View.VISIBLE
+        } else {
+            errorView.visibility = View.GONE
+        }
+    }
+
+    fun isAllFieldsValid(): Boolean {
+        return items.all { 
+            it.location.trim().isNotEmpty() && 
+            it.place.trim().isNotEmpty() && 
+            it.distance.trim().isNotEmpty()
+        }
+    }
+
+    private fun notifyValidationChanged() {
+        onValidationChanged?.invoke(isAllFieldsValid())
+    }
+    
+    fun validateAllFields() {
+        notifyValidationChanged()
+    }
+    
+    fun showAllValidationErrors() {
+        items.forEach { it.hasTriedToSubmit = true }
+        notifyDataSetChanged()
+    }

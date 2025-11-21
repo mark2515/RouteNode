@@ -45,19 +45,29 @@ class SearchFragment : Fragment() {
         val recycler = view.findViewById<RecyclerView>(R.id.recyclerRouteNodes)
         recycler.layoutManager = LinearLayoutManager(requireContext())
         
-        routeNodeAdapter = RouteNodeAdapter(
-            mutableListOf(RouteNodeAdapter.RouteNodeData(no = 1)),
-            placesClient
-        ) {
-            askAIForAdvice()
-        }
-        recycler.adapter = routeNodeAdapter
-        
         // Setup Ask AI button
         val buttonAskAI = view.findViewById<MaterialButton>(R.id.buttonAskAI)
         buttonAskAI.setOnClickListener {
-            askAIForAdvice()
+            // Check if all fields are valid
+            if (::routeNodeAdapter.isInitialized && !routeNodeAdapter.isAllFieldsValid()) {
+                // Show validation errors
+                routeNodeAdapter.showAllValidationErrors()
+                Toast.makeText(requireContext(), "Please fill in all required fields", Toast.LENGTH_SHORT).show()
+            } else {
+                askAIForAdvice()
+            }
         }
+        
+        routeNodeAdapter = RouteNodeAdapter(
+            mutableListOf(RouteNodeAdapter.RouteNodeData(no = 1)),
+            placesClient,
+            onRetryAi = {
+                askAIForAdvice()
+            },
+            onValidationChanged = { isValid ->
+            }
+        )
+        recycler.adapter = routeNodeAdapter
         
         // Observe ViewModel
         observeViewModel()
@@ -72,6 +82,7 @@ class SearchFragment : Fragment() {
         // Observe loading state
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             val button = view?.findViewById<MaterialButton>(R.id.buttonAskAI)
+            // Only disable during loading
             button?.isEnabled = !isLoading
             button?.text = if (isLoading) "Loading..." else "Ask AI for advice !"
             
