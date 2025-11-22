@@ -16,8 +16,9 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
     fun buildPrompt(routeNodes: List<RouteNodeInput>): String {
         val promptBuilder = StringBuilder()
         
-        promptBuilder.append("I need help planning a route with the following stops:\n\n")
-        
+        promptBuilder.append("I need help planning a route with the following stops:\n")
+        promptBuilder.append("Please put the addresses of the places you recommended in a code block so I can copy them.\n\n")
+
         routeNodes.forEachIndexed { index, node ->
             promptBuilder.append("Stop ${node.no}:\n")
             promptBuilder.append("Location: ${node.location}\n")

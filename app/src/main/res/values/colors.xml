@@ -13,4 +13,5 @@
     <color name="primaryColor">#6200EE</color>
     <color name="textColorSecondary">#757575</color>
     <color name="codeTextColor">#D84315</color>
+    <color name="codeBackgroundColor">#F5F5F5</color>
 </resources>
