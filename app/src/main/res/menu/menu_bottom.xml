@@ -13,7 +13,7 @@
         android:icon="@android:drawable/ic_menu_myplaces"
         android:title="Account" />
     <item
-        android:id="@+id/nav_manual_search"
+        android:id="@+id/map_test"
         android:icon="@android:drawable/ic_dialog_map"
         android:title="Map"/>
 </menu>

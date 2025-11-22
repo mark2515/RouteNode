@@ -1,5 +1,6 @@
 package moe.group13.routenode
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -11,6 +12,7 @@ import moe.group13.routenode.ui.FavoritesFragment
 import moe.group13.routenode.ui.search.SearchFragment
 import moe.group13.routenode.ui.manual.ManualSearchFragment
 import com.google.firebase.firestore.FirebaseFirestore
+import moe.group13.routenode.ui.map.MapActivity
 
 class MainActivity : AppCompatActivity() {
     private val db = FirebaseFirestore.getInstance()
@@ -35,8 +37,7 @@ class MainActivity : AppCompatActivity() {
         val fragments = listOf(
             SearchFragment(),
             FavoritesFragment(),
-            AccountFragment(),
-            ManualSearchFragment()
+            AccountFragment()
         )
 
         viewPager.adapter = object : FragmentStateAdapter(this) {
@@ -50,7 +51,10 @@ class MainActivity : AppCompatActivity() {
                 R.id.nav_search -> viewPager.currentItem = 0
                 R.id.nav_favorites -> viewPager.currentItem = 1
                 R.id.nav_account -> viewPager.currentItem = 2
-                R.id.nav_manual_search -> viewPager.currentItem = 3
+                R.id.map_test -> {
+                    val intent = Intent(this, MapActivity::class.java)
+                    startActivity(intent)
+                }
             }
             true
         }
@@ -62,7 +66,7 @@ class MainActivity : AppCompatActivity() {
                     0 -> R.id.nav_search
                     1 -> R.id.nav_favorites
                     2 -> R.id.nav_account
-                    3 -> R.id.nav_manual_search
+                    3 -> R.id.map_test
                     else -> R.id.nav_search
                 }
                 if (bottomNav.selectedItemId != selectedId) {
