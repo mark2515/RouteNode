@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -342,15 +343,17 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
         //beging building the waypoints string
-        var waypoints = ""
-        if (pin.location.size > 1) {
-            //everything but the last
-            for (i in 0 until pin.location.size - 1) {
-                val loc = pin.location[i]
-                waypoints += "${loc.latitude},${loc.longitude}"
+        var waypoints = pin.location
+            //waypoints: the inbetween
+            .dropLast(1)
+            //format needs to be LngLat 1 | LngLat 2 |LngLat 3
+            .joinToString("|") { loc ->
+                "${loc.latitude},${loc.longitude}"
             }
 
-        }
+                Log.d("MapActivity", "Waypoints: $waypoints")
+
+
         //build the request
         val uri = "https://www.google.com/maps/dir/?api=1" +
                 "&origin=${origin.latitude},${origin.longitude}" +
