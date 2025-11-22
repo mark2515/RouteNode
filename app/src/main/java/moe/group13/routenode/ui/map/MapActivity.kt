@@ -47,7 +47,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     // for later, to take a list from the favorites fragment
     private var destinations: List<LatLng> = emptyList()
 
-    private var userLatLng = LatLng(49.2827, -123.1207) //if it nulls out, set it to Vancouver
+    //default to Vancouver
+    private var userLatLng = LatLng(49.2827, -123.1207)
 
     //@TODO: User Settings prefeences should change this
     private var mode = "walking"
@@ -57,9 +58,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     // idea: https://developers.google.com/android/reference/com/google/android/gms/maps/model/Marker
     private var userPins: MutableList<Marker> = mutableListOf()
     private var isCameraCentered = false
-
-
-    private lateinit var togglePin: Button
 
     //fusedLocation stuff, for continuous tracking
     //documentation: https://developer.android.com/develop/sensors-and-location/location/request-updates
@@ -128,12 +126,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         } else {
             Toast.makeText(this, "Latitude/Longitude arrays mismatch", Toast.LENGTH_SHORT).show()
         }
-        //TODO: Hardcoded testing fragments
-        // Flow: Users current position -> SFU -> Stanley Park
-        destinations = listOf(
-            LatLng(49.2781, -122.9199), // SFU: waypoint
-            LatLng(49.3043, -123.1443)  // Stanley Park: destination
-        )
+
         // Map Frag
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map_fragment) as SupportMapFragment
@@ -151,6 +144,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         adapter = UserRouteAdapter(pins) { pin ->
             openGoogleMaps(pin)
         }
+        //list routes in TextView
         adapter = UserRouteAdapter(pins) { pin ->
             //resusing code from Markers
             val message = StringBuilder()
@@ -282,6 +276,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     //add using pins function
     //currently main, will swtich to IO, as TODO: print from firebase
+
     @SuppressLint("PotentialBehaviorOverride")
     fun addUserPin() {
         val pins = mapViewModel.fetchUserStarts()
@@ -338,7 +333,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // user position
         val origin = userLatLng
-        //use first location, pin origin
+        // last location is the destination
         val destination = pin.location.last()
 
 
