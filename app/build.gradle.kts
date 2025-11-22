@@ -1,4 +1,4 @@
-import java.util.Properties
+ import java.util.Properties
 import java.io.FileInputStream
 
 plugins {
@@ -68,6 +68,7 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        viewBinding = true
     }
 }
 
@@ -87,6 +88,7 @@ dependencies {
     implementation(libs.google.material)
     implementation(libs.androidx.viewpager2)
     implementation(libs.androidx.fragment.ktx)
+    implementation(libs.firebase.auth)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -8,6 +8,8 @@ import android.widget.LinearLayout
 import androidx.fragment.app.Fragment
 import moe.group13.routenode.R
 import android.content.Intent
+import com.google.firebase.auth.FirebaseAuth
+import moe.group13.routenode.auth.SignInActivity
 
 
 class AccountFragment : Fragment() {
@@ -31,5 +33,12 @@ class AccountFragment : Fragment() {
 
         settingsBtn.setOnClickListener { startActivity(Intent(requireContext(), SettingsActivity::class.java)) }
 
+        logoutBtn.setOnClickListener {
+            FirebaseAuth.getInstance().signOut()
+
+            val intent = Intent(requireContext(), SignInActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+        }
     }
 }

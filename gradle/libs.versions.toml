@@ -15,6 +15,7 @@ viewpager2 = "1.1.0"
 fragmentKtx = "1.8.4"
 googleServices = "4.4.1"
 firebaseFirestoreKtx = "26.0.2"
+firebaseAuth = "24.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -39,6 +40,7 @@ firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "fir
 firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx", version = "23.0.0" }
 firebase-firestore-ktx = { module = "com.google.firebase:firebase-firestore-ktx" }
 google-firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version = "25.1.4" }
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuth" }
 
 [plugins]
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
