@@ -8,6 +8,7 @@ import android.text.style.BulletSpan
 import android.text.style.RelativeSizeSpan
 import android.text.style.TypefaceSpan
 import android.text.style.ForegroundColorSpan
+import android.text.style.StrikethroughSpan
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import moe.group13.routenode.R
@@ -93,24 +94,7 @@ object MarkdownRenderer {
         level: Int,
         textView: TextView
     ) {
-        val start = builder.length
-        builder.append(text)
-        val end = builder.length
-        
-        // Size based on header level
-        val size = when (level) {
-            1 -> 1.5f
-            2 -> 1.3f
-            3 -> 1.15f
-            else -> 1.0f
-        }
-        
-        builder.setSpan(RelativeSizeSpan(size), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        builder.setSpan(StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        
-        // Add color for headers
-        val color = ContextCompat.getColor(textView.context, R.color.primaryColor)
-        builder.setSpan(ForegroundColorSpan(color), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        val processedText = processInlineMarkdown(text, builder, builder.length, textView)
     }
     
     private fun appendBulletPoint(
@@ -119,16 +103,13 @@ object MarkdownRenderer {
         textView: TextView
     ) {
         val start = builder.length
-        builder.append(text)
+        processInlineMarkdown(text, builder, start, textView)
         val end = builder.length
         
         // Add bullet span
         val bulletColor = ContextCompat.getColor(textView.context, R.color.textColorSecondary)
         val bulletSpan = BulletSpan(20, bulletColor)
         builder.setSpan(bulletSpan, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        
-        // Apply inline formatting
-        applyInlineFormatting(builder, start, end, textView)
     }
     
     private fun appendNumberedPoint(
@@ -138,11 +119,8 @@ object MarkdownRenderer {
         textView: TextView
     ) {
         val start = builder.length
-        builder.append("$number. $text")
-        val end = builder.length
-        
-        // Apply inline formatting
-        applyInlineFormatting(builder, start, end, textView)
+        builder.append("$number. ")
+        processInlineMarkdown(text, builder, builder.length, textView)
     }
     
     private fun appendCodeBlock(
@@ -160,7 +138,7 @@ object MarkdownRenderer {
         // Smaller size
         builder.setSpan(RelativeSizeSpan(0.9f), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         
-        // Background color effect
+        // Code color
         val codeColor = ContextCompat.getColor(textView.context, R.color.codeTextColor)
         builder.setSpan(ForegroundColorSpan(codeColor), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
     }
@@ -170,71 +148,72 @@ object MarkdownRenderer {
         line: String,
         textView: TextView
     ) {
-        val start = builder.length
-        builder.append(line)
-        val end = builder.length
-        
-        applyInlineFormatting(builder, start, end, textView)
+        processInlineMarkdown(line, builder, builder.length, textView)
     }
     
-    private fun applyInlineFormatting(
+    private fun processInlineMarkdown(
+        text: String,
         builder: SpannableStringBuilder,
-        start: Int,
-        end: Int,
+        startOffset: Int,
         textView: TextView
     ) {
-        val text = builder.substring(start, end)
+        var remaining = text
+        var currentPos = startOffset
         
-        // Bold (**text** or __text__)
-        applyPattern(builder, start, text, Regex("\\*\\*(.+?)\\*\\*")) { matchStart, matchEnd ->
-            builder.setSpan(StyleSpan(Typeface.BOLD), matchStart, matchEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-        applyPattern(builder, start, text, Regex("__(.+?)__")) { matchStart, matchEnd ->
-            builder.setSpan(StyleSpan(Typeface.BOLD), matchStart, matchEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-        
-        // Italic (*text* or _text_)
-        applyPattern(builder, start, text, Regex("(?<!\\*)\\*(?!\\*)(.+?)(?<!\\*)\\*(?!\\*)")) { matchStart, matchEnd ->
-            builder.setSpan(StyleSpan(Typeface.ITALIC), matchStart, matchEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-        applyPattern(builder, start, text, Regex("(?<!_)_(?!_)(.+?)(?<!_)_(?!_)")) { matchStart, matchEnd ->
-            builder.setSpan(StyleSpan(Typeface.ITALIC), matchStart, matchEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-        
-        // Inline code (`code`)
-        applyPattern(builder, start, text, Regex("`(.+?)`")) { matchStart, matchEnd ->
-            builder.setSpan(TypefaceSpan("monospace"), matchStart, matchEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            val codeColor = ContextCompat.getColor(textView.context, R.color.codeTextColor)
-            builder.setSpan(ForegroundColorSpan(codeColor), matchStart, matchEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-        
-        // Strikethrough (~~text~~)
-        applyPattern(builder, start, text, Regex("~~(.+?)~~")) { matchStart, matchEnd ->
-            builder.setSpan(
-                android.text.style.StrikethroughSpan(),
-                matchStart,
-                matchEnd,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        while (remaining.isNotEmpty()) {
+            // Find the earliest markdown pattern
+            val patterns = listOf(
+                Triple(Regex("^\\*\\*([^*]+?)\\*\\*"), 2, "bold"),     // **bold**
+                Triple(Regex("^__([^_]+?)__"), 2, "bold"),             // __bold__
+                Triple(Regex("^(?<!\\*)\\*([^*]+?)\\*"), 1, "italic"), // *italic*
+                Triple(Regex("^(?<!_)_([^_]+?)_"), 1, "italic"),       // _italic_
+                Triple(Regex("^`([^`]+?)`"), 1, "code"),               // `code`
+                Triple(Regex("^~~([^~]+?)~~"), 2, "strike")            // ~~strike~~
             )
-        }
-    }
-    
-    private fun applyPattern(
-        builder: SpannableStringBuilder,
-        offset: Int,
-        text: String,
-        pattern: Regex,
-        applySpan: (Int, Int) -> Unit
-    ) {
-        val matches = pattern.findAll(text)
-        for (match in matches) {
-            val matchStart = offset + match.range.first
-            val matchEnd = offset + match.range.last + 1
-            val groupStart = offset + match.groups[1]!!.range.first
-            val groupEnd = offset + match.groups[1]!!.range.last + 1
             
-            // Apply the span to the content
-            applySpan(groupStart, groupEnd)
+            var matched = false
+            
+            for ((pattern, syntaxLen, type) in patterns) {
+                val match = pattern.find(remaining)
+                if (match != null) {
+                    val content = match.groupValues[1]
+                    val matchLength = match.value.length
+                    
+                    // Append the content without markdown syntax
+                    val contentStart = builder.length
+                    builder.append(content)
+                    val contentEnd = builder.length
+                    
+                    // Apply appropriate span
+                    when (type) {
+                        "bold" -> {
+                            builder.setSpan(StyleSpan(Typeface.BOLD), contentStart, contentEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        }
+                        "italic" -> {
+                            builder.setSpan(StyleSpan(Typeface.ITALIC), contentStart, contentEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        }
+                        "code" -> {
+                            builder.setSpan(TypefaceSpan("monospace"), contentStart, contentEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                            val codeColor = ContextCompat.getColor(textView.context, R.color.codeTextColor)
+                            builder.setSpan(ForegroundColorSpan(codeColor), contentStart, contentEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        }
+                        "strike" -> {
+                            builder.setSpan(StrikethroughSpan(), contentStart, contentEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        }
+                    }
+                    
+                    // Update remaining text
+                    remaining = remaining.substring(matchLength)
+                    matched = true
+                    break
+                }
+            }
+            
+            if (!matched) {
+                // No pattern matched, just append the next character
+                builder.append(remaining[0])
+                remaining = remaining.substring(1)
+            }
         }
     }
     
@@ -243,23 +222,28 @@ object MarkdownRenderer {
         
         var cleaned = markdown
         
+        // Remove code blocks first
+        cleaned = cleaned.replace(Regex("```[\\s\\S]*?```"), "")
+        
         // Remove headers
-        cleaned = cleaned.replace(Regex("^#{1,6}\\s"), "")
+        cleaned = cleaned.replace(Regex("(?m)^#{1,6}\\s"), "")
         
         // Remove bold
         cleaned = cleaned.replace(Regex("\\*\\*(.+?)\\*\\*"), "$1")
         cleaned = cleaned.replace(Regex("__(.+?)__"), "$1")
         
         // Remove italic
-        cleaned = cleaned.replace(Regex("\\*(.+?)\\*"), "$1")
-        cleaned = cleaned.replace(Regex("_(.+?)_"), "$1")
+        cleaned = cleaned.replace(Regex("(?<!\\*)\\*([^*]+?)\\*(?!\\*)"), "$1")
+        cleaned = cleaned.replace(Regex("(?<!_)_([^_]+?)_(?!_)"), "$1")
         
-        // Remove code
-        cleaned = cleaned.replace(Regex("`(.+?)`"), "$1")
-        cleaned = cleaned.replace(Regex("```(.+?)```"), "$1")
+        // Remove inline code
+        cleaned = cleaned.replace(Regex("`([^`]+?)`"), "$1")
         
         // Remove strikethrough
         cleaned = cleaned.replace(Regex("~~(.+?)~~"), "$1")
+        
+        // Remove bullet points
+        cleaned = cleaned.replace(Regex("(?m)^[*-]\\s"), "")
         
         return cleaned
     }
