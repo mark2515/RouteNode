@@ -17,15 +17,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/toggle_pins_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:text="Toggle Pins"
-        app:layout_constraintEnd_toEndOf="@id/map_fragment"
-        app:layout_constraintTop_toTopOf="@id/map_fragment" />
-    <!-- Directions -->
+
+    <!-- List of Map Markers -->
     <LinearLayout
         android:id="@+id/directions_container"
         android:layout_width="0dp"
@@ -43,24 +36,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <ScrollView
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/user_routes_recyclerview"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <TextView
-                android:id="@+id/directions_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Directions will appear here..."
-                android:textSize="16sp" />
-        </ScrollView>
-
-        <Button
-            android:id="@+id/btn_back"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Back" />
+            android:layout_margin="16dp"
+            android:scrollbars="vertical" />
+
     </LinearLayout>
-
-
 </androidx.constraintlayout.widget.ConstraintLayout>
