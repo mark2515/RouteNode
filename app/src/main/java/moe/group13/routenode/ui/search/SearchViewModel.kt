@@ -4,7 +4,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import moe.group13.routenode.data.model.GptConfig
+import moe.group13.routenode.utils.GptConfig
 import moe.group13.routenode.data.repository.OpenAiService
 import moe.group13.routenode.data.repository.PromptBuilder
 

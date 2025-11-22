@@ -6,6 +6,7 @@ import android.content.Context
 import android.view.View
 import android.widget.Toast
 import moe.group13.routenode.R
+import moe.group13.routenode.utils.MarkdownRenderer
 
 object RouteNodeFooterBinder {
     
@@ -30,7 +31,8 @@ object RouteNodeFooterBinder {
         holder.aiChatContainer.visibility = if (hasResponse) View.VISIBLE else View.GONE
         
         if (hasResponse) {
-            holder.aiMessage.text = aiResponse
+            // Render markdown formatted text
+            MarkdownRenderer.render(holder.aiMessage, aiResponse)
         } else {
             holder.aiMessage.text = ""
         }
@@ -54,7 +56,9 @@ object RouteNodeFooterBinder {
     private fun copyAiResponse(context: Context, response: String?) {
         if (!response.isNullOrBlank()) {
             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            val clip = ClipData.newPlainText("AI response", response)
+            // Copy the plain text version
+            val plainText = MarkdownRenderer.cleanMarkdown(response)
+            val clip = ClipData.newPlainText("AI response", plainText)
             clipboard.setPrimaryClip(clip)
             Toast.makeText(
                 context,

@@ -1,4 +1,4 @@
-package moe.group13.routenode.data.model
+package moe.group13.routenode.utils
 import moe.group13.routenode.BuildConfig
 
 data class GptRequest(

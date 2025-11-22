@@ -1,6 +1,6 @@
 package moe.group13.routenode.data.repository
 
-import moe.group13.routenode.data.model.GptConfig
+import moe.group13.routenode.utils.GptConfig
 import moe.group13.routenode.ui.search.RouteNodeAdapter
 
 class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) {
@@ -83,7 +83,7 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
         val prompt = buildPrompt(routeNodes)
         
         // Create the GPT request
-        val gptRequest = moe.group13.routenode.data.model.GptRequest(
+        val gptRequest = moe.group13.routenode.utils.GptRequest(
             model = model ?: defaultConfig.model,
             prompt = prompt,
             temperature = temperature ?: defaultConfig.temperature,

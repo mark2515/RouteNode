@@ -2,8 +2,8 @@ package moe.group13.routenode.data.repository
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import moe.group13.routenode.data.model.GptConfig
-import moe.group13.routenode.data.model.GptRequest
+import moe.group13.routenode.utils.GptConfig
+import moe.group13.routenode.utils.GptRequest
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
