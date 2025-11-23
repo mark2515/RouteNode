@@ -1,6 +1,7 @@
 package moe.group13.routenode.ui.account
 
 import android.app.AlertDialog
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.*
@@ -9,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import moe.group13.routenode.R
 
 class EditProfileActivity : AppCompatActivity() {
@@ -29,6 +31,7 @@ class EditProfileActivity : AppCompatActivity() {
 
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
+    private val storage = FirebaseStorage.getInstance()
 
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -46,17 +49,9 @@ class EditProfileActivity : AppCompatActivity() {
         initViews()
         loadExistingData()
 
-        btnSave.setOnClickListener {
-            saveProfile()
-        }
-
-        btnChangePhoto.setOnClickListener {
-            pickImageLauncher.launch("image/*")
-        }
-
-        inputCuisine.setOnClickListener {
-            showCuisineDialog()
-        }
+        btnSave.setOnClickListener { saveProfile() }
+        btnChangePhoto.setOnClickListener { pickImageLauncher.launch("image/*") }
+        inputCuisine.setOnClickListener { showCuisineDialog() }
     }
 
     private fun initViews() {
@@ -74,30 +69,19 @@ class EditProfileActivity : AppCompatActivity() {
             android.R.layout.simple_spinner_dropdown_item,
             listOf("Walking", "Transit", "Driving", "Cycling")
         )
-        
-        // Apply ceiling to distance input
+
         inputDistance.setOnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
-                val currentText = inputDistance.text.toString()
-                if (currentText.isNotEmpty()) {
-                    try {
-                        val value = currentText.toDouble()
-                        if (value > 0) {
-                            val ceiledValue = kotlin.math.ceil(value).toInt()
-                            inputDistance.setText(ceiledValue.toString())
-                        }
-                    } catch (e: NumberFormatException) {
-                        // Invalid number format, ignore
-                    }
+                val value = inputDistance.text.toString().toDoubleOrNull()
+                if (value != null && value > 0) {
+                    inputDistance.setText(kotlin.math.ceil(value).toInt().toString())
                 }
             }
         }
     }
 
     private fun showCuisineDialog() {
-        val checkedItems = BooleanArray(cuisines.size) { i ->
-            selectedCuisines.contains(cuisines[i])
-        }
+        val checkedItems = BooleanArray(cuisines.size) { selectedCuisines.contains(cuisines[it]) }
 
         AlertDialog.Builder(this)
             .setTitle("Select Favorite Cuisine")
@@ -148,14 +132,38 @@ class EditProfileActivity : AppCompatActivity() {
     private fun saveProfile() {
         val uid = auth.currentUser?.uid ?: return
 
-        val data = mapOf(
+        if (selectedPhotoUri != null) {
+            uploadPhotoThenSave(uid)
+        } else {
+            saveToFirestore(uid, null)
+        }
+    }
+
+    private fun uploadPhotoThenSave(uid: String) {
+        val storageRef = storage.getReference("profile_images/$uid.jpg")
+
+        storageRef.putFile(selectedPhotoUri!!)
+            .addOnSuccessListener {
+                storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
+                    saveToFirestore(uid, downloadUrl.toString())
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Photo upload failed", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun saveToFirestore(uid: String, photoUrl: String?) {
+        val data = mutableMapOf(
             "name" to inputName.text.toString(),
             "bio" to inputBio.text.toString(),
             "cuisine" to selectedCuisines.joinToString(", "),
             "travelMode" to spinnerTravelMode.selectedItem.toString(),
-            "distance" to inputDistance.text.toString(),
-            "photoUrl" to selectedPhotoUri?.toString()
+            "distance" to inputDistance.text.toString()
         )
+
+        if (photoUrl != null)
+            data["photoUrl"] = photoUrl
 
         db.collection("users")
             .document(uid)
@@ -164,7 +172,14 @@ class EditProfileActivity : AppCompatActivity() {
             .set(data)
             .addOnSuccessListener {
                 Toast.makeText(this, "Profile updated!", Toast.LENGTH_SHORT).show()
-                finish()
+                goBackToMyProfile()
             }
+    }
+
+    private fun goBackToMyProfile() {
+        val intent = Intent(this, MyProfileActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+        startActivity(intent)
+        finish()
     }
 }
