@@ -107,4 +107,5 @@ dependencies {
     implementation("com.google.android.libraries.places:places:4.0.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.maps.android:android-maps-utils:2.3.0")
+    implementation("com.google.firebase:firebase-storage-ktx:20.3.0")
 }

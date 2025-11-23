@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "557891886440",
-    "project_id": "routenode-5cb5d",
-    "storage_bucket": "routenode-5cb5d.firebasestorage.app"
+    "project_number": "1042100511185",
+    "project_id": "routenode-723b9",
+    "storage_bucket": "routenode-723b9.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:557891886440:android:8ee7bcccfebf38afc8cadd",
+        "mobilesdk_app_id": "1:1042100511185:android:435e802be2560d23e380f0",
         "android_client_info": {
           "package_name": "moe.group13.routenode"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCL2ybSmmU2VqQ1ap0u2mly9x1C-79l2x4"
+          "current_key": "AIzaSyBAy0tR3Ur3sbQyVWSM0aHOOFDyiXHuNy4"
         }
       ],
       "services": {
