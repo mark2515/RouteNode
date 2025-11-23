@@ -6,6 +6,21 @@
     android:layout_height="match_parent"
     tools:context=".auth.SignUpActivity">
 
+    <TextView
+        android:id="@+id/appTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:text="RouteNode"
+        android:textColor="@color/black"
+        android:textSize="74dp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/emailLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/emailLayout"
