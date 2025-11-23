@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import moe.group13.routenode.R
 import android.content.Intent
@@ -28,6 +29,10 @@ class AccountFragment : Fragment() {
         val settingsBtn = view.findViewById<LinearLayout>(R.id.SettingsBtn)
         val AIBtn = view.findViewById<LinearLayout>(R.id.AIModelsBtn)
         val logoutBtn = view.findViewById<LinearLayout>(R.id.LogoutBtn)
+        val emailTextView = view.findViewById<TextView>(R.id.EmailTV)
+
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        emailTextView.text = currentUser?.email ?: "johnsmith1131@gmail.com"
 
         myProfileBtn.setOnClickListener { startActivity(Intent(requireContext(), MyProfileActivity::class.java)) }
 
