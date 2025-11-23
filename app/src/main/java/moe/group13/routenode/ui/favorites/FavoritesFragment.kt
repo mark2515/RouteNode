@@ -42,11 +42,16 @@ class FavoritesFragment : Fragment() {
         adapter = RouteAdapter(
             emptyList(),
             onClick = { route ->
-                // originally toggle favorite
                 onRouteClick(route)
             },
             onMenuClick = { route, view ->
                 showOptionsMenu(route, view)
+            },
+            onFavoriteClick = { route ->
+                viewModel.removeFavorite(route.id)
+            },
+            isFavoriteCheck = { routeId, callback ->
+                viewModel.isFavorite(routeId, callback)
             }
         )
         recyclerView.adapter = adapter
@@ -90,8 +95,7 @@ class FavoritesFragment : Fragment() {
     }
 
     private fun onRouteClick(route: Route) {
-        // Handle route click - could navigate to route details screen
-        // For now, just toggle favorite as an example
+        // Handle route click - navigate to map with route
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setTitle("Start Route")
             .setMessage("Do you want to go on this route: ${route.title}?")
@@ -109,7 +113,6 @@ class FavoritesFragment : Fragment() {
                 dialog.dismiss()
             }
             .show()
-        viewModel.toggleFavorite(route)
     }
 
     override fun onResume() {
@@ -124,12 +127,23 @@ class FavoritesFragment : Fragment() {
 
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
+                R.id.action_remove_favorite -> {
+                    viewModel.removeFavorite(route.id)
+                    true
+                }
                 R.id.action_edit -> {
                     showEditDialog(route)
                     true
                 }
                 R.id.action_delete -> {
-                    viewModel.deleteFavorite(route)
+                    androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                        .setTitle("Remove Favorite")
+                        .setMessage("Are you sure you want to remove '${route.title}' from favorites?")
+                        .setPositiveButton("Remove") { _, _ ->
+                            viewModel.removeFavorite(route.id)
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
                     true
                 }
                 else -> false

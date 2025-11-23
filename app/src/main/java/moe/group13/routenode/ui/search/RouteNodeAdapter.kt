@@ -16,7 +16,8 @@ class RouteNodeAdapter(
     private val items: MutableList<RouteNodeData>,
     private val placesClient: PlacesClient,
     private val onRetryAi: () -> Unit,
-    private val onValidationChanged: ((Boolean) -> Unit)? = null
+    private val onValidationChanged: ((Boolean) -> Unit)? = null,
+    private val onFavoriteAi: (() -> Unit)? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private companion object {
@@ -64,7 +65,7 @@ class RouteNodeAdapter(
                     onRetryAi()
                 },
                 onFavoriteAi = {
-                    // TODO: Implement favorite functionality
+                    onFavoriteAi?.invoke()
                 }
             )
             return

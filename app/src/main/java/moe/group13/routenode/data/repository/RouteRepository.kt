@@ -161,13 +161,15 @@ class RouteRepository(
     suspend fun saveFavorite(route: Route): Boolean {
         return try {
             val currentUid = uid()
+            // Ensure creatorId is set to the current user who is saving the favorite
+            val routeWithCreator = route.copy(creatorId = currentUid)
             favoritesCollection
                 .document(currentUid)
                 .collection("routes")
                 .document(route.id)
-                .set(route)
+                .set(routeWithCreator)
                 .await()
-            Log.d("ROUTE_REPO", "Saved favorite: ${route.id}")
+            Log.d("ROUTE_REPO", "Saved favorite: ${route.id} by user: $currentUid")
             true
         } catch (e: Exception) {
             Log.e("ROUTE_REPO", "Error saving favorite", e)
