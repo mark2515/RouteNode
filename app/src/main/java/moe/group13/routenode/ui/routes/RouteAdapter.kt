@@ -1,8 +1,10 @@
 package moe.group13.routenode.ui.routes
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import moe.group13.routenode.R
@@ -12,11 +14,14 @@ class RouteAdapter(
     private var routes: List<Route>,
     private val onClick: (Route) -> Unit,
     private val onMenuClick: (Route, View) -> Unit,
+    private val onFavoriteClick: ((Route) -> Unit)? = null,
+    private val isFavoriteCheck: ((String, (Boolean) -> Unit) -> Unit)? = null
 ): RecyclerView.Adapter<RouteAdapter.RouteViewHolder>() {
     inner class RouteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title: TextView = itemView.findViewById(R.id.route_title)
         val description: TextView = itemView.findViewById(R.id.route_description)
         val distance: TextView = itemView.findViewById(R.id.route_distance)
+        val favoriteIcon: ImageView = itemView.findViewById(R.id.iv_favorite)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RouteViewHolder {
@@ -32,6 +37,24 @@ class RouteAdapter(
         holder.description.text = route.description
         holder.distance.text = "${route.distanceKm} km"
 
+        // Update favorite icon state
+        if (isFavoriteCheck != null && onFavoriteClick != null) {
+            isFavoriteCheck(route.id) { isFavorite ->
+                updateFavoriteIcon(holder.favoriteIcon, isFavorite)
+            }
+            
+            holder.favoriteIcon.setOnClickListener {
+                onFavoriteClick(route)
+                // Optimistically update UI
+                isFavoriteCheck(route.id) { isFavorite ->
+                    updateFavoriteIcon(holder.favoriteIcon, !isFavorite)
+                }
+            }
+        } else {
+            // Hide favorite icon if callbacks not provided
+            holder.favoriteIcon.visibility = View.GONE
+        }
+
         //open dialog and on confirm, opens map and directions
         holder.itemView.setOnClickListener {
             onClick(route)
@@ -41,7 +64,16 @@ class RouteAdapter(
         moreBtn.setOnClickListener {
             onMenuClick(route, it)
         }
+    }
 
+    private fun updateFavoriteIcon(icon: ImageView, isFavorite: Boolean) {
+        if (isFavorite) {
+            icon.setColorFilter(Color.parseColor("#FFD700")) // Gold color for favorited
+            icon.alpha = 1.0f
+        } else {
+            icon.setColorFilter(Color.parseColor("#808080")) // Gray color for not favorited
+            icon.alpha = 0.6f
+        }
     }
 
     override fun getItemCount(): Int = routes.size

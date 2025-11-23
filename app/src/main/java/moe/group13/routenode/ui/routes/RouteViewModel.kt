@@ -172,8 +172,20 @@ class RouteViewModel(
             callback(false)
         }
     }
-    //TESTING PLACEHOLDER FUNC
-    fun deleteFavorite(route: Route){
-        //TODO: delete favorite
+    fun deleteFavorite(route: Route) = viewModelScope.launch {
+        try {
+            isLoading.value = true
+            errorMessage.value = null
+            val success = repo.removeFavorite(route.id)
+            if (success) {
+                loadFavorites()
+            } else {
+                errorMessage.value = "Failed to remove favorite"
+            }
+        } catch (e: Exception) {
+            errorMessage.value = "Failed to remove favorite: ${e.message}"
+        } finally {
+            isLoading.value = false
+        }
     }
 }

@@ -1,5 +1,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
+        android:id="@+id/action_add_favorite"
+        android:title="Add to Favorites"/>
+    <item
+        android:id="@+id/action_remove_favorite"
+        android:title="Remove from Favorites"/>
+    <item
         android:id="@+id/action_edit"
         android:title="Edit"/>
     <item

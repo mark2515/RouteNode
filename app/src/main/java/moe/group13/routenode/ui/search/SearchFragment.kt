@@ -6,17 +6,22 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.material.button.MaterialButton
+import com.google.firebase.auth.FirebaseAuth
 import moe.group13.routenode.R
+import moe.group13.routenode.data.model.Route
+import moe.group13.routenode.ui.routes.RouteViewModel
 
 class SearchFragment : Fragment() {
     
     private lateinit var viewModel: SearchViewModel
+    private val routeViewModel: RouteViewModel by viewModels()
     private lateinit var placesClient: PlacesClient
     private lateinit var routeNodeAdapter: RouteNodeAdapter
     
@@ -68,6 +73,9 @@ class SearchFragment : Fragment() {
                 askAIForAdvice()
             },
             onValidationChanged = { isValid ->
+            },
+            onFavoriteAi = {
+                saveRouteAsFavorite()
             }
         )
         recycler.adapter = routeNodeAdapter
@@ -112,5 +120,82 @@ class SearchFragment : Fragment() {
                 Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
             }
         }
+        
+        // Observe route view model errors
+        routeViewModel.errorMessage.observe(viewLifecycleOwner) { error ->
+            error?.let {
+                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    private fun saveRouteAsFavorite() {
+        val routeNodeData = routeNodeAdapter.getRouteNodeData()
+        val aiResponse = viewModel.aiResponse.value
+        
+        if (routeNodeData.isEmpty()) {
+            Toast.makeText(requireContext(), "No route data to save", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        // Create a route title from the first location and place
+        val firstNode = routeNodeData.first()
+        val routeTitle = if (firstNode.location.isNotEmpty() && firstNode.place.isNotEmpty()) {
+            "${firstNode.location} - ${firstNode.place}"
+        } else if (firstNode.location.isNotEmpty()) {
+            firstNode.location
+        } else if (firstNode.place.isNotEmpty()) {
+            firstNode.place
+        } else {
+            "AI Generated Route"
+        }
+        
+        // Calculate total distance
+        val totalDistance = routeNodeData.sumOf { 
+            it.distance.toDoubleOrNull() ?: 0.0 
+        }
+        
+        // Create route description from AI response or route nodes
+        val routeDescription = aiResponse?.take(200) ?: run {
+            routeNodeData.joinToString("\n") { node ->
+                "Node ${node.no}: ${node.location} - ${node.place} (${node.distance} km)"
+            }
+        }
+        
+        // Generate a unique ID for the route
+        val routeId = java.util.UUID.randomUUID().toString()
+        
+        // Get current user ID
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        val creatorId = currentUser?.uid ?: ""
+        
+        if (creatorId.isEmpty()) {
+            Toast.makeText(requireContext(), "Please log in to save favorites", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        // Create a Route object with creatorId set
+        val route = Route(
+            id = routeId,
+            title = routeTitle,
+            description = routeDescription,
+            waypoints = emptyList(), // Could be populated from locations if needed
+            distanceKm = totalDistance,
+            creatorId = creatorId, // Set to current user who is saving the favorite
+            isPublic = false,
+            tags = emptyList(),
+            estimatedDurationMinutes = (totalDistance * 12).toInt(), // Rough estimate: 12 min/km for walking
+            difficulty = "easy",
+            rating = 0.0,
+            ratingCount = 0,
+            favoriteCount = 0,
+            imageUrl = "",
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis()
+        )
+        
+        // Save as favorite
+        routeViewModel.saveFavorite(route)
+        Toast.makeText(requireContext(), "Route saved to favorites!", Toast.LENGTH_SHORT).show()
     }
 }
