@@ -63,7 +63,6 @@ class AccountFragment : Fragment() {
         }
     }
 
-    // 🔥 Refresh every time the fragment becomes visible again
     override fun onResume() {
         super.onResume()
         loadAccountInfo()
@@ -73,10 +72,8 @@ class AccountFragment : Fragment() {
         val user = auth.currentUser ?: return
         val uid = user.uid
 
-        // Set email immediately
         emailTextView.text = user.email ?: "Unknown Email"
 
-        // Load Name + Photo from Firestore
         db.collection("users")
             .document(uid)
             .collection("profile")
