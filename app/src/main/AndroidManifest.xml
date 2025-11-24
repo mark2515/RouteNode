@@ -31,16 +31,11 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="true"
+            android:exported="false"
             android:label="@string/app_name"
             android:theme="@style/Theme.RouteNode">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
+
         <activity android:name=".ui.account.MyProfileActivity" />
         <activity android:name=".ui.account.SettingsActivity" />
         <activity android:name=".ui.account.ChangePasswordActivity" />
