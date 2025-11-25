@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark theme -->
+    <color name="ask_ai_button_bg">#424242</color>
+    <color name="ask_ai_button_text">#FFFFFF</color>
+
+    <!-- placeholders -->
+    <color name="input_hint">#CCCCCC</color>
+
+    <!-- AI reply text color -->
+    <color name="ai_text">#FFFFFF</color>
+</resources>

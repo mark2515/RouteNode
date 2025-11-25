@@ -20,9 +20,9 @@
         android:layout_margin="16dp"
         android:text="Ask AI for advice !"
         android:textAllCaps="false"
-        android:textColor="@android:color/white"
+        android:textColor="@color/ask_ai_button_text"
         app:cornerRadius="8dp"
-        app:backgroundTint="@android:color/black"
+        app:backgroundTint="@color/ask_ai_button_bg"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />

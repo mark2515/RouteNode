@@ -45,7 +45,7 @@
                 android:id="@+id/aiFooterMessage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@android:color/black"
+                android:textColor="@color/ai_text"
                 android:textSize="14sp" />
 
             <LinearLayout
