@@ -62,9 +62,6 @@ class UserPreferencesRepository(
 
     // Update specific preference fields
     suspend fun updatePreferences(
-        favoriteCuisines: List<String>? = null,
-        travelMode: String? = null,
-        preferredDistanceKm: Double? = null,
         unitPreference: String? = null,
         theme: String? = null,
         notificationsEnabled: Boolean? = null,
@@ -74,9 +71,6 @@ class UserPreferencesRepository(
             val currentUid = uid()
             val updates = mutableMapOf<String, Any>("updatedAt" to System.currentTimeMillis())
 
-            favoriteCuisines?.let { updates["favoriteCuisines"] = it }
-            travelMode?.let { updates["travelMode"] = it }
-            preferredDistanceKm?.let { updates["preferredDistanceKm"] = it }
             unitPreference?.let { updates["unitPreference"] = it }
             theme?.let { updates["theme"] = it }
             notificationsEnabled?.let { updates["notificationsEnabled"] = it }

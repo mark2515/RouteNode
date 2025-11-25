@@ -43,43 +43,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"/>
 
-        <!-- Favorite Cuisine -->
-        <TextView
-            android:text="Favorite Cuisine"
-            android:textStyle="bold"
-            android:layout_marginTop="20dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-        <TextView
-            android:id="@+id/inputCuisine"
-            android:hint="Select..."
-            android:padding="10dp"
-            android:background="#EEEEEE"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-        <!-- Travel Mode -->
-        <TextView
-            android:text="Travel Mode"
-            android:textStyle="bold"
-            android:layout_marginTop="20dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-        <Spinner
-            android:id="@+id/spinnerTravelMode"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-
-        <!-- Preferred Distance -->
-        <EditText
-            android:id="@+id/inputDistance"
-            android:hint="Preferred distance (km)"
-            android:inputType="numberDecimal"
-            android:layout_marginTop="20dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
 
         <!-- Save Button -->
         <Button

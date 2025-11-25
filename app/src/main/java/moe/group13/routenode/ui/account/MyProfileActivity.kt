@@ -15,9 +15,6 @@ class MyProfileActivity : AppCompatActivity() {
 
     private lateinit var tvName: TextView
     private lateinit var tvEmail: TextView
-    private lateinit var tvCuisine: TextView
-    private lateinit var tvTravelMode: TextView
-    private lateinit var tvDistance: TextView
     private lateinit var profileImage: ImageView
     private lateinit var btnEditProfile: Button
     private lateinit var btnChangePassword: Button
@@ -44,9 +41,6 @@ class MyProfileActivity : AppCompatActivity() {
         profileImage = findViewById(R.id.profileImage)
         tvName = findViewById(R.id.tvName)
         tvEmail = findViewById(R.id.tvEmail)
-        tvCuisine = findViewById(R.id.tvCuisine)
-        tvTravelMode = findViewById(R.id.tvTravelMode)
-        tvDistance = findViewById(R.id.tvDistance)
 
         btnEditProfile = findViewById(R.id.btnEditProfile)
         btnChangePassword = findViewById(R.id.btnChangePassword)
@@ -75,15 +69,9 @@ class MyProfileActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { doc ->
                 val name = doc.getString("name") ?: "Unknown User"
-                val cuisine = doc.getString("cuisine") ?: "Not Set"
-                val travelMode = doc.getString("travelMode") ?: "Not Set"
-                val distance = doc.getString("distance") ?: "Not Set"
                 val photoUrl = doc.getString("photoUrl")
 
                 tvName.text = name
-                tvCuisine.text = cuisine
-                tvTravelMode.text = travelMode
-                tvDistance.text = distance
 
                 if (!photoUrl.isNullOrEmpty()) {
                     Glide.with(this)

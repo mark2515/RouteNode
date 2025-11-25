@@ -7,9 +7,6 @@ data class UserPreferences(
     @DocumentId var id: String = "",
     var userId: String = "",
     var preferredPlaces: List<PreferredPlace> = emptyList(),
-    var favoriteCuisines: List<String> = emptyList(),
-    var travelMode: String = "walking", // walking, driving, transit, cycling
-    var preferredDistanceKm: Double = 5.0,
     var unitPreference: String = "km", // km, miles
     var theme: String = "light", // light, dark, system
     var notificationsEnabled: Boolean = true,

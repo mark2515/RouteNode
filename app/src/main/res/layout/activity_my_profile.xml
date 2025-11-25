@@ -62,48 +62,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
-        <TextView
-            android:text="Favorite Cuisine"
-            android:layout_marginTop="10dp"
-            android:textSize="16sp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/tvCuisine"
-            android:text="Coffee, Brunch, Korean"
-            android:textColor="#555"
-            android:layout_marginBottom="10dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:text="Travel Mode"
-            android:textSize="16sp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/tvTravelMode"
-            android:text="Walking"
-            android:textColor="#555"
-            android:layout_marginBottom="10dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:text="Preferred Distance"
-            android:textSize="16sp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/tvDistance"
-            android:text="1 km"
-            android:textColor="#555"
-            android:layout_marginBottom="20dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+        <!-- Preference fields (none currently shown) -->
 
         <Button
             android:id="@+id/btnEditProfile"

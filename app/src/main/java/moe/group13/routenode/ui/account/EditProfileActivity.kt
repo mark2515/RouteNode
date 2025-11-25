@@ -1,6 +1,5 @@
 package moe.group13.routenode.ui.account
 
-import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -17,17 +16,11 @@ class EditProfileActivity : AppCompatActivity() {
 
     private lateinit var inputName: EditText
     private lateinit var inputBio: EditText
-    private lateinit var inputCuisine: TextView
-    private lateinit var spinnerTravelMode: Spinner
-    private lateinit var inputDistance: EditText
     private lateinit var btnSave: Button
     private lateinit var profileImage: ImageView
     private lateinit var btnChangePhoto: Button
 
     private var selectedPhotoUri: Uri? = null
-
-    private val cuisines = arrayOf("Coffee", "Brunch", "Korean", "Japanese", "Dessert", "Chinese")
-    private val selectedCuisines = mutableListOf<String>()
 
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
@@ -51,49 +44,14 @@ class EditProfileActivity : AppCompatActivity() {
 
         btnSave.setOnClickListener { saveProfile() }
         btnChangePhoto.setOnClickListener { pickImageLauncher.launch("image/*") }
-        inputCuisine.setOnClickListener { showCuisineDialog() }
     }
 
     private fun initViews() {
         inputName = findViewById(R.id.inputName)
         inputBio = findViewById(R.id.inputBio)
-        inputCuisine = findViewById(R.id.inputCuisine)
-        spinnerTravelMode = findViewById(R.id.spinnerTravelMode)
-        inputDistance = findViewById(R.id.inputDistance)
         btnSave = findViewById(R.id.btnSaveProfile)
         profileImage = findViewById(R.id.editProfileImage)
         btnChangePhoto = findViewById(R.id.btnChangePhoto)
-
-        spinnerTravelMode.adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_dropdown_item,
-            listOf("Walking", "Transit", "Driving", "Cycling")
-        )
-
-        inputDistance.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus) {
-                val value = inputDistance.text.toString().toDoubleOrNull()
-                if (value != null && value > 0) {
-                    inputDistance.setText(kotlin.math.ceil(value).toInt().toString())
-                }
-            }
-        }
-    }
-
-    private fun showCuisineDialog() {
-        val checkedItems = BooleanArray(cuisines.size) { selectedCuisines.contains(cuisines[it]) }
-
-        AlertDialog.Builder(this)
-            .setTitle("Select Favorite Cuisine")
-            .setMultiChoiceItems(cuisines, checkedItems) { _, index, isChecked ->
-                if (isChecked) selectedCuisines.add(cuisines[index])
-                else selectedCuisines.remove(cuisines[index])
-            }
-            .setPositiveButton("OK") { _, _ ->
-                inputCuisine.text = selectedCuisines.joinToString(", ")
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
     }
 
     private fun loadExistingData() {
@@ -107,20 +65,6 @@ class EditProfileActivity : AppCompatActivity() {
             .addOnSuccessListener { doc ->
                 inputName.setText(doc.getString("name") ?: "")
                 inputBio.setText(doc.getString("bio") ?: "")
-
-                val cuisineStr = doc.getString("cuisine") ?: ""
-                selectedCuisines.clear()
-                if (cuisineStr.isNotEmpty())
-                    selectedCuisines.addAll(cuisineStr.split(", "))
-
-                inputCuisine.text = cuisineStr
-
-                val travelMode = doc.getString("travelMode") ?: "Walking"
-                spinnerTravelMode.setSelection(
-                    (spinnerTravelMode.adapter as ArrayAdapter<String>).getPosition(travelMode)
-                )
-
-                inputDistance.setText(doc.getString("distance") ?: "")
 
                 val photoUrl = doc.getString("photoUrl")
                 if (!photoUrl.isNullOrEmpty()) {
@@ -156,10 +100,7 @@ class EditProfileActivity : AppCompatActivity() {
     private fun saveToFirestore(uid: String, photoUrl: String?) {
         val data = mutableMapOf(
             "name" to inputName.text.toString(),
-            "bio" to inputBio.text.toString(),
-            "cuisine" to selectedCuisines.joinToString(", "),
-            "travelMode" to spinnerTravelMode.selectedItem.toString(),
-            "distance" to inputDistance.text.toString()
+            "bio" to inputBio.text.toString()
         )
 
         if (photoUrl != null)
