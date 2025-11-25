@@ -37,7 +37,7 @@
             android:layout_marginBottom="20dp"/>
 
         <TextView
-            android:text="Appearance"
+            android:text="App Preferences"
             android:textStyle="bold"
             android:textSize="18sp"
             android:layout_width="wrap_content"
