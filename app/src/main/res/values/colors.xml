@@ -33,4 +33,7 @@
 
     <!-- AI reply text color -->
     <color name="ai_text">#212121</color>
+
+    <!-- Icon colors -->
+    <color name="icon_gray">#666666</color>
 </resources>

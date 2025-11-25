@@ -9,4 +9,7 @@
 
     <!-- AI reply text color -->
     <color name="ai_text">#FFFFFF</color>
+
+    <!-- Icon colors (dark theme) -->
+    <color name="icon_gray">#999999</color>
 </resources>

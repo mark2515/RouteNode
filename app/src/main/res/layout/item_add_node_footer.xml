@@ -62,7 +62,8 @@
                     android:background="@android:color/transparent"
                     android:contentDescription="@string/copy_ai_response"
                     android:padding="4dp"
-                    android:src="@drawable/ic_copy_ai" />
+                    android:src="@drawable/ic_copy_ai"
+                    android:tint="@color/icon_gray" />
 
                 <ImageButton
                     android:id="@+id/buttonRetryAi"
@@ -71,7 +72,8 @@
                     android:background="@android:color/transparent"
                     android:contentDescription="@string/retry_ai_response"
                     android:padding="4dp"
-                    android:src="@drawable/ic_retry_ai" />
+                    android:src="@drawable/ic_retry_ai"
+                    android:tint="@color/icon_gray" />
 
                 <ImageButton
                     android:id="@+id/buttonFavoriteAi"
@@ -80,7 +82,8 @@
                     android:background="@android:color/transparent"
                     android:contentDescription="@string/favorite_ai_response"
                     android:padding="4dp"
-                    android:src="@drawable/ic_favorite" />
+                    android:src="@drawable/ic_favorite"
+                    android:tint="@color/icon_gray" />
 
             </LinearLayout>
         </LinearLayout>
