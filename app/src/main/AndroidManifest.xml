@@ -40,6 +40,7 @@
         <activity android:name=".ui.account.SettingsActivity" />
         <activity android:name=".ui.account.ChangePasswordActivity" />
         <activity android:name=".ui.account.EditProfileActivity" />
+        <activity android:name=".ui.account.AIModelsActivity" />
         <activity android:name=".ui.map.MapActivity" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"

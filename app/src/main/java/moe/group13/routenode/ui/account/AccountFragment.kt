@@ -37,7 +37,7 @@ class AccountFragment : Fragment() {
 
         val myProfileBtn = view.findViewById<LinearLayout>(R.id.myProfileBtn)
         val settingsBtn = view.findViewById<LinearLayout>(R.id.SettingsBtn)
-        val AIBtn = view.findViewById<LinearLayout>(R.id.AIModelsBtn)
+        val aiModelsBtn = view.findViewById<LinearLayout>(R.id.AIModelsBtn)
         val logoutBtn = view.findViewById<LinearLayout>(R.id.LogoutBtn)
 
         nameTextView = view.findViewById(R.id.NameTV)
@@ -52,6 +52,10 @@ class AccountFragment : Fragment() {
 
         settingsBtn.setOnClickListener {
             startActivity(Intent(requireContext(), SettingsActivity::class.java))
+        }
+
+        aiModelsBtn.setOnClickListener {
+            startActivity(Intent(requireContext(), AIModelsActivity::class.java))
         }
 
         logoutBtn.setOnClickListener {
