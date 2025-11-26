@@ -12,15 +12,12 @@ import android.widget.Filter
 import android.widget.Filterable
 import android.widget.TextView
 import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.tasks.Tasks
 import com.google.android.libraries.places.api.model.AutocompleteSessionToken
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
+import kotlinx.coroutines.*
 
 class PlacesAutoCompleteAdapter(
     context: Context,
@@ -32,6 +29,9 @@ class PlacesAutoCompleteAdapter(
 
     private var resultList: ArrayList<PlaceAutocomplete> = ArrayList()
     private val token: AutocompleteSessionToken = AutocompleteSessionToken.newInstance()
+    
+    // Use a coroutine scope for async operations
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     data class PlaceAutocomplete(
         val placeId: String,
@@ -63,21 +63,20 @@ class PlacesAutoCompleteAdapter(
             override fun performFiltering(constraint: CharSequence?): FilterResults {
                 val filterResults = FilterResults()
                 
-                if (constraint != null) {
-                    resultList = getPredictions(constraint)
+                if (constraint != null && constraint.isNotEmpty()) {
+                    // Trigger async prediction fetch
+                    getPredictionsAsync(constraint.toString())
+                } else {
+                    resultList.clear()
                     filterResults.values = resultList
-                    filterResults.count = resultList.size
+                    filterResults.count = 0
                 }
                 
                 return filterResults
             }
 
             override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
-                if (results != null && results.count > 0) {
-                    notifyDataSetChanged()
-                } else {
-                    notifyDataSetInvalidated()
-                }
+                notifyDataSetChanged()
             }
 
             override fun convertResultToString(resultValue: Any?): CharSequence {
@@ -90,40 +89,47 @@ class PlacesAutoCompleteAdapter(
         }
     }
 
-    private fun getPredictions(constraint: CharSequence): ArrayList<PlaceAutocomplete> {
-        val resultList = ArrayList<PlaceAutocomplete>()
 
-        // Create a new request with the typed text
+    private fun getPredictionsAsync(query: String) {
         val request = FindAutocompletePredictionsRequest.builder()
             .setSessionToken(token)
-            .setQuery(constraint.toString())
+            .setQuery(query)
             .build()
 
-        try {
-            val response = Tasks.await(placesClient.findAutocompletePredictions(request), 3, TimeUnit.SECONDS)
-            
-            for (prediction in response.autocompletePredictions) {
-                Log.d("PlacesAutoComplete", "Prediction: ${prediction.getFullText(null)}")
+        placesClient.findAutocompletePredictions(request)
+            .addOnSuccessListener { response ->
+                val newResultList = ArrayList<PlaceAutocomplete>()
                 
-                resultList.add(
-                    PlaceAutocomplete(
-                        placeId = prediction.placeId,
-                        primaryText = prediction.getPrimaryText(null).toString(),
-                        secondaryText = prediction.getSecondaryText(null).toString()
+                for (prediction in response.autocompletePredictions) {
+                    Log.d("PlacesAutoComplete", "Prediction: ${prediction.getFullText(null)}")
+                    
+                    newResultList.add(
+                        PlaceAutocomplete(
+                            placeId = prediction.placeId,
+                            primaryText = prediction.getPrimaryText(null).toString(),
+                            secondaryText = prediction.getSecondaryText(null).toString()
+                        )
                     )
-                )
+                }
+                
+                // Update results on main thread
+                resultList = newResultList
+                notifyDataSetChanged()
             }
-        } catch (e: ExecutionException) {
-            Log.e("PlacesAutoComplete", "Error getting predictions: ${e.message}")
-        } catch (e: InterruptedException) {
-            Log.e("PlacesAutoComplete", "Error getting predictions: ${e.message}")
-        } catch (e: TimeoutException) {
-            Log.e("PlacesAutoComplete", "Timeout getting predictions")
-        } catch (e: ApiException) {
-            Log.e("PlacesAutoComplete", "API Error getting predictions: ${e.message}")
-        }
-
-        return resultList
+            .addOnFailureListener { exception ->
+                when (exception) {
+                    is ApiException -> {
+                        Log.e("PlacesAutoComplete", "API Error getting predictions: ${exception.message}")
+                    }
+                    else -> {
+                        Log.e("PlacesAutoComplete", "Error getting predictions: ${exception.message}")
+                    }
+                }
+                
+                // Clear results on error
+                resultList.clear()
+                notifyDataSetInvalidated()
+            }
     }
 
     fun getPlaceDetails(placeId: String, callback: (Place?) -> Unit) {
@@ -142,5 +148,9 @@ class PlacesAutoCompleteAdapter(
             Log.e("PlacesAutoComplete", "Error fetching place details: ${exception.message}")
             callback(null)
         }
+    }
+    
+    fun cleanup() {
+        scope.cancel()
     }
 }
