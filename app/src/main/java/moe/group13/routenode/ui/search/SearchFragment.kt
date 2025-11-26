@@ -1,5 +1,6 @@
 package moe.group13.routenode.ui.search
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,6 +18,7 @@ import com.google.firebase.auth.FirebaseAuth
 import moe.group13.routenode.R
 import moe.group13.routenode.data.model.Route
 import moe.group13.routenode.ui.routes.RouteViewModel
+import moe.group13.routenode.utils.GptConfig
 
 class SearchFragment : Fragment() {
     
@@ -87,9 +89,28 @@ class SearchFragment : Fragment() {
     private fun askAIForAdvice() {
         // Get the current route node data from the adapter
         val routeNodeData = routeNodeAdapter.getRouteNodeData()
-        
-        // Call ViewModel with the actual user input data
-        viewModel.askAIForAdviceWithRouteNodes(routeNodeData)
+
+        // Read AI settings saved from AIModelsActivity
+        val prefs = requireContext().getSharedPreferences("ai_model_settings", Context.MODE_PRIVATE)
+        val defaultConfig = GptConfig.DEFAULT_CONFIG
+
+        val model = prefs.getString("model", defaultConfig.model)
+        val temperature = prefs.getFloat(
+            "temperature",
+            defaultConfig.temperature.toFloat()
+        ).toDouble()
+        val maxTokens = prefs.getInt(
+            "max_tokens",
+            defaultConfig.max_tokens
+        )
+
+        // Call ViewModel with the actual user input data and AI settings
+        viewModel.askAIForAdviceWithRouteNodes(
+            routeNodeData = routeNodeData,
+            model = model,
+            temperature = temperature,
+            maxTokens = maxTokens
+        )
     }
     
     private fun observeViewModel() {

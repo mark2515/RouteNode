@@ -75,7 +75,12 @@ class SearchViewModel(
         }
     }
     
-    fun askAIForAdviceWithRouteNodes(routeNodeData: List<RouteNodeAdapter.RouteNodeData>) {
+    fun askAIForAdviceWithRouteNodes(
+        routeNodeData: List<RouteNodeAdapter.RouteNodeData>,
+        model: String? = null,
+        temperature: Double? = null,
+        maxTokens: Int? = null
+    ) {
         viewModelScope.launch {
             try {
                 isLoading.value = true
@@ -83,7 +88,10 @@ class SearchViewModel(
                 aiResponse.value = ""
                 
                 val result = promptBuilder.buildAndSendPromptFromAdapterData(
-                    routeNodeData = routeNodeData
+                    routeNodeData = routeNodeData,
+                    model = model,
+                    temperature = temperature,
+                    maxTokens = maxTokens
                 )
                 
                 result.onSuccess { response ->

@@ -2,11 +2,14 @@ package moe.group13.routenode.ui.account
 
 import android.os.Bundle
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Spinner
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import moe.group13.routenode.R
+import moe.group13.routenode.utils.GptConfig
 import kotlin.math.roundToInt
 
 class AIModelsActivity : AppCompatActivity() {
@@ -18,10 +21,16 @@ class AIModelsActivity : AppCompatActivity() {
         private const val KEY_TEMPERATURE = "temperature"
         private const val KEY_MAX_TOKENS = "max_tokens"
 
-        private const val DEFAULT_MODEL = "gpt-4-turbo"
+        private val AVAILABLE_MODELS = listOf(
+            "gpt-4-turbo",
+            "gpt-4.1",
+            "gpt-4.1-mini"
+        )
+
+        private val DEFAULT_MODEL = GptConfig.DEFAULT_CONFIG.model
         private const val DEFAULT_LANGUAGE = "English"
-        private const val DEFAULT_TEMPERATURE = 0.7
-        private const val DEFAULT_MAX_TOKENS = 800
+        private val DEFAULT_TEMPERATURE = GptConfig.DEFAULT_CONFIG.temperature
+        private val DEFAULT_MAX_TOKENS = GptConfig.DEFAULT_CONFIG.max_tokens
 
         private const val MIN_TEMPERATURE = 0.2
         private const val MAX_TEMPERATURE = 1.2
@@ -53,6 +62,7 @@ class AIModelsActivity : AppCompatActivity() {
     private lateinit var editResponseLength: EditText
     private lateinit var btnResponseLengthUp: ImageButton
     private lateinit var btnResponseLengthDown: ImageButton
+    private lateinit var btnSaveChanges: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,10 +84,11 @@ class AIModelsActivity : AppCompatActivity() {
         editResponseLength = findViewById(R.id.editResponseLength)
         btnResponseLengthUp = findViewById(R.id.btnResponseLengthUp)
         btnResponseLengthDown = findViewById(R.id.btnResponseLengthDown)
+        btnSaveChanges = findViewById(R.id.btnSaveChanges)
     }
 
     private fun setupModelSpinner() {
-        val models = listOf(DEFAULT_MODEL)
+        val models = AVAILABLE_MODELS
         val adapter = ArrayAdapter(
             this,
             android.R.layout.simple_spinner_item,
@@ -105,9 +116,15 @@ class AIModelsActivity : AppCompatActivity() {
         val savedTemperature = prefs.getFloat(KEY_TEMPERATURE, DEFAULT_TEMPERATURE.toFloat())
             .toDouble()
         val savedMaxTokens = prefs.getInt(KEY_MAX_TOKENS, DEFAULT_MAX_TOKENS)
-
-        // Currently only one model, so always select the first
-        spinnerModel.setSelection(0)
+        val modelIndex = AVAILABLE_MODELS.indexOf(savedModel).let { index ->
+            if (index >= 0) {
+                index
+            } else {
+                val defaultIndex = AVAILABLE_MODELS.indexOf(DEFAULT_MODEL)
+                if (defaultIndex >= 0) defaultIndex else 0
+            }
+        }
+        spinnerModel.setSelection(modelIndex)
 
         // Set language selection
         val languageIndex = languages.indexOf(savedLanguage).let { index ->
@@ -138,20 +155,28 @@ class AIModelsActivity : AppCompatActivity() {
         btnResponseLengthDown.setOnClickListener {
             adjustResponseLength(-TOKENS_STEP)
         }
+
+        btnSaveChanges.setOnClickListener {
+            saveCurrentValues()
+            Toast.makeText(
+                this@AIModelsActivity,
+                "Changes saved",
+                Toast.LENGTH_SHORT
+            ).show()
+            finish()
+        }
     }
 
     private fun adjustCreativity(delta: Double) {
         val current = parseCreativity()
         val newValue = clampTemperature(current + delta)
         editCreativity.setText(String.format("%.1f", newValue))
-        saveCurrentValues()
     }
 
     private fun adjustResponseLength(delta: Int) {
         val current = parseResponseLength()
         val newValue = clampTokens(current + delta)
         editResponseLength.setText(newValue.toString())
-        saveCurrentValues()
     }
 
     private fun parseCreativity(): Double {
