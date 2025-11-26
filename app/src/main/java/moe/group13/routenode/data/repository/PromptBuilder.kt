@@ -139,12 +139,7 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
         // Build the prompt
         val prompt = buildPrompt(routeNodes)
 
-        val requestedModel = model ?: defaultConfig.model
-        val apiModel = when (requestedModel) {
-            "gpt-4.1",
-            "gpt-4.1-mini" -> "gpt-4-turbo"
-            else -> requestedModel
-        }
+        val apiModel = model ?: defaultConfig.model
 
         // Create the GPT request
         val gptRequest = moe.group13.routenode.utils.GptRequest(
