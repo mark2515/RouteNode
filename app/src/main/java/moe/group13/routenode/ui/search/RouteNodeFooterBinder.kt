@@ -56,9 +56,7 @@ object RouteNodeFooterBinder {
     private fun copyAiResponse(context: Context, response: String?) {
         if (!response.isNullOrBlank()) {
             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            // Copy the plain text version
-            val plainText = MarkdownRenderer.cleanMarkdown(response)
-            val clip = ClipData.newPlainText("AI response", plainText)
+            val clip = ClipData.newPlainText("AI response", response)
             clipboard.setPrimaryClip(clip)
             Toast.makeText(
                 context,
