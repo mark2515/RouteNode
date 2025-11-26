@@ -29,6 +29,9 @@ class RouteNodeAdapter(
 
     private var aiResponse: String? = null
     private var isLoadingAi: Boolean = false
+    
+    // Cache autocomplete adapters to prevent memory leaks and repeated creation
+    private val autocompleteAdapters = mutableMapOf<Int, PlacesAutoCompleteAdapter>()
 
     data class RouteNodeData(
         var no: Int = 1,
@@ -119,7 +122,10 @@ class RouteNodeAdapter(
         }
 
         // Setup Google Places Autocomplete for location field
-        val autocompleteAdapter = PlacesAutoCompleteAdapter(nodeHolder.itemView.context, placesClient)
+        // Reuse adapter if already created for this position
+        val autocompleteAdapter = autocompleteAdapters.getOrPut(position) {
+            PlacesAutoCompleteAdapter(nodeHolder.itemView.context, placesClient)
+        }
         nodeHolder.editLocation.setAdapter(autocompleteAdapter)
         nodeHolder.editLocation.threshold = 3
         
@@ -369,5 +375,10 @@ class RouteNodeAdapter(
     
     fun getRouteNodeData(): List<RouteNodeData> {
         return items.toList()
+    }
+    
+    fun cleanup() {
+        autocompleteAdapters.values.forEach { it.cleanup() }
+        autocompleteAdapters.clear()
     }
 }

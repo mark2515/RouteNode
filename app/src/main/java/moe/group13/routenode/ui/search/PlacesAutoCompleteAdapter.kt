@@ -66,6 +66,9 @@ class PlacesAutoCompleteAdapter(
                 if (constraint != null && constraint.isNotEmpty()) {
                     // Trigger async prediction fetch
                     getPredictionsAsync(constraint.toString())
+                    // Return current results
+                    filterResults.values = resultList
+                    filterResults.count = resultList.size
                 } else {
                     resultList.clear()
                     filterResults.values = resultList
@@ -76,6 +79,7 @@ class PlacesAutoCompleteAdapter(
             }
 
             override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
+                // Always notify data changed as results come from async callback
                 notifyDataSetChanged()
             }
 

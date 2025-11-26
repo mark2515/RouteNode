@@ -219,4 +219,11 @@ class SearchFragment : Fragment() {
         routeViewModel.saveFavorite(route)
         Toast.makeText(requireContext(), "Route saved to favorites!", Toast.LENGTH_SHORT).show()
     }
+    
+    override fun onDestroyView() {
+        super.onDestroyView()
+        if (::routeNodeAdapter.isInitialized) {
+            routeNodeAdapter.cleanup()
+        }
+    }
 }
