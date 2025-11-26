@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import moe.group13.routenode.R
@@ -29,6 +30,7 @@ class MyProfileActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_my_profile)
 
+        setupTopAppBar()
         initViews()
         loadProfileData()  // initial load
         loadPreferenceSummary()
@@ -40,6 +42,14 @@ class MyProfileActivity : AppCompatActivity() {
         super.onResume()
         loadProfileData()
         loadPreferenceSummary()
+    }
+
+    private fun setupTopAppBar() {
+        val toolbar = findViewById<MaterialToolbar>(R.id.topAppBar)
+        toolbar.setNavigationOnClickListener {
+            // Return to the Account screen
+            onBackPressedDispatcher.onBackPressed()
+        }
     }
 
     private fun initViews() {

@@ -7,6 +7,7 @@ import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import com.google.android.material.appbar.MaterialToolbar
 import moe.group13.routenode.R
 
 class SettingsActivity : AppCompatActivity() {
@@ -29,6 +30,8 @@ class SettingsActivity : AppCompatActivity() {
         applySavedTheme()
 
         setContentView(R.layout.activity_settings)
+
+        setupTopAppBar()
 
         // Bind UI
         switchRecommendations = findViewById(R.id.switchRecommendations)
@@ -107,6 +110,14 @@ class SettingsActivity : AppCompatActivity() {
                 .setMessage("RouteNode version 1.0.0\nDeveloped by Group 13")
                 .setPositiveButton("OK", null)
                 .show()
+        }
+    }
+
+    private fun setupTopAppBar() {
+        val toolbar = findViewById<MaterialToolbar>(R.id.topAppBar)
+        toolbar.setNavigationOnClickListener {
+            // Return to the Account screen
+            onBackPressedDispatcher.onBackPressed()
         }
     }
 

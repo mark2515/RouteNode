@@ -8,6 +8,7 @@ import android.widget.ImageButton
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.appbar.MaterialToolbar
 import moe.group13.routenode.R
 import moe.group13.routenode.utils.GptConfig
 import kotlin.math.roundToInt
@@ -68,6 +69,7 @@ class AIModelsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ai_models)
 
+        setupTopAppBar()
         initViews()
         setupModelSpinner()
         setupLanguageSpinner()
@@ -164,6 +166,14 @@ class AIModelsActivity : AppCompatActivity() {
                 Toast.LENGTH_SHORT
             ).show()
             finish()
+        }
+    }
+
+    private fun setupTopAppBar() {
+        val toolbar = findViewById<MaterialToolbar>(R.id.topAppBar)
+        toolbar.setNavigationOnClickListener {
+            // Return to the Account screen
+            onBackPressedDispatcher.onBackPressed()
         }
     }
 
