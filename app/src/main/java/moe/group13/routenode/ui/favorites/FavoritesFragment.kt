@@ -48,7 +48,7 @@ class FavoritesFragment : Fragment() {
                 showOptionsMenu(route, view)
             },
             onFavoriteClick = { route ->
-                viewModel.removeFavorite(route.id)
+                showRemoveFavoriteDialog(route)
             },
             isFavoriteCheck = { routeId, callback ->
                 viewModel.isFavorite(routeId, callback)
@@ -155,7 +155,14 @@ class FavoritesFragment : Fragment() {
         //TODO: Implement editing
     }
 
-
-
-
+    private fun showRemoveFavoriteDialog(route: Route) {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Remove Favorite")
+            .setMessage("Are you sure you want to remove '${route.title}' from favorites?")
+            .setPositiveButton("Remove") { _, _ ->
+                viewModel.removeFavorite(route.id)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
 }
