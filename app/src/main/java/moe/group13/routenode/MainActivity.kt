@@ -36,15 +36,29 @@ class MainActivity : AppCompatActivity() {
 
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_search -> viewPager.currentItem = 0
-                R.id.nav_favorites -> viewPager.currentItem = 1
-                R.id.nav_account -> viewPager.currentItem = 2
+                R.id.nav_search -> {
+                    viewPager.currentItem = 0
+                    true
+                }
+
+                R.id.nav_favorites -> {
+                    viewPager.currentItem = 1
+                    true
+                }
+
+                R.id.nav_account -> {
+                    viewPager.currentItem = 2
+                    true
+                }
+
                 R.id.map_test -> {
                     val intent = Intent(this, MapActivity::class.java)
                     startActivity(intent)
+                    false
                 }
+
+                else -> false
             }
-            true
         }
 
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
