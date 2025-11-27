@@ -20,5 +20,6 @@ data class Route(
     var favoriteCount: Int = 0, // number of users who favorited
     var imageUrl: String = "", // optional route image
     var createdAt: Long = System.currentTimeMillis(),
-    var updatedAt: Long = System.currentTimeMillis()
+    var updatedAt: Long = System.currentTimeMillis(),
+    var routeNodeDataJson: String = "" // JSON string storing route node data for editing
 )

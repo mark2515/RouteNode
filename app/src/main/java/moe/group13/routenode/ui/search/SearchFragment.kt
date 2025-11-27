@@ -2,10 +2,13 @@ package moe.group13.routenode.ui.search
 
 import android.content.Context
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
@@ -15,6 +18,7 @@ import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
+import com.google.gson.Gson
 import moe.group13.routenode.R
 import moe.group13.routenode.data.model.Route
 import moe.group13.routenode.ui.routes.RouteViewModel
@@ -84,6 +88,27 @@ class SearchFragment : Fragment() {
         
         // Observe ViewModel
         observeViewModel()
+        
+        // Check if we need to load route data for editing
+        checkForEditRoute()
+    }
+    
+    private fun checkForEditRoute() {
+        val prefs = requireContext().getSharedPreferences("route_edit", Context.MODE_PRIVATE)
+        val routeNodeDataJson = prefs.getString("edit_route_node_data", null)
+        if (routeNodeDataJson != null && routeNodeDataJson.isNotEmpty()) {
+            try {
+                val gson = Gson()
+                val routeNodeData = gson.fromJson(routeNodeDataJson, Array<RouteNodeAdapter.RouteNodeData>::class.java).toList()
+                if (routeNodeData.isNotEmpty() && ::routeNodeAdapter.isInitialized) {
+                    routeNodeAdapter.setRouteNodeData(routeNodeData)
+                    // Clear the edit flag
+                    prefs.edit().remove("edit_route_node_data").apply()
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SearchFragment", "Error loading route data", e)
+            }
+        }
     }
     
     private fun askAIForAdvice() {
@@ -167,18 +192,37 @@ class SearchFragment : Fragment() {
             return
         }
         
-        // Create a route title from the first location and place
-        val firstNode = routeNodeData.first()
-        val routeTitle = if (firstNode.location.isNotEmpty() && firstNode.place.isNotEmpty()) {
-            "${firstNode.location} - ${firstNode.place}"
-        } else if (firstNode.location.isNotEmpty()) {
-            firstNode.location
-        } else if (firstNode.place.isNotEmpty()) {
-            firstNode.place
-        } else {
-            "AI Generated Route"
-        }
+        // Get current favorite count for default name
+        val currentFavorites = routeViewModel.favorites.value ?: emptyList()
+        val defaultName = "favorite-${currentFavorites.size + 1}"
         
+        // Show dialog to name the favorite
+        val input = EditText(requireContext())
+        input.inputType = InputType.TYPE_CLASS_TEXT
+        input.setText(defaultName)
+        input.selectAll()
+        
+        AlertDialog.Builder(requireContext())
+            .setTitle("Name Your Favorite")
+            .setMessage("Enter a name for this favorite route:")
+            .setView(input)
+            .setPositiveButton("Save") { _, _ ->
+                val favoriteName = input.text.toString().trim()
+                if (favoriteName.isBlank()) {
+                    Toast.makeText(requireContext(), "Please enter a name", Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+                saveFavoriteWithName(routeNodeData, aiResponse, favoriteName)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+    
+    private fun saveFavoriteWithName(
+        routeNodeData: List<RouteNodeAdapter.RouteNodeData>,
+        aiResponse: String?,
+        favoriteName: String
+    ) {
         // Calculate total distance
         val totalDistance = routeNodeData.sumOf { 
             it.distance.toDoubleOrNull() ?: 0.0 
@@ -203,10 +247,14 @@ class SearchFragment : Fragment() {
             return
         }
         
+        // Convert route node data to JSON
+        val gson = Gson()
+        val routeNodeDataJson = gson.toJson(routeNodeData)
+        
         // Create a Route object with creatorId set
         val route = Route(
             id = routeId,
-            title = routeTitle,
+            title = favoriteName,
             description = routeDescription,
             waypoints = emptyList(), // Could be populated from locations if needed
             distanceKm = totalDistance,
@@ -220,12 +268,18 @@ class SearchFragment : Fragment() {
             favoriteCount = 0,
             imageUrl = "",
             createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
+            updatedAt = System.currentTimeMillis(),
+            routeNodeDataJson = routeNodeDataJson
         )
         
-        // Save as favorite
-        routeViewModel.saveFavorite(route)
+        // Save as favorite with custom name
+        routeViewModel.saveFavorite(route, favoriteName)
         Toast.makeText(requireContext(), "Route saved to favorites!", Toast.LENGTH_SHORT).show()
+        
+        // Reset the input screen after saving
+        routeNodeAdapter.reset()
+        // Clear AI response
+        viewModel.clearAiResponse()
     }
     
     override fun onResume() {
@@ -234,6 +288,8 @@ class SearchFragment : Fragment() {
         if (::routeNodeAdapter.isInitialized) {
             routeNodeAdapter.updateDistanceUnits()
         }
+        // Check for edit route data
+        checkForEditRoute()
     }
     
     override fun onDestroyView() {

@@ -2,6 +2,8 @@ package moe.group13.routenode.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.textfield.TextInputEditText
 import moe.group13.routenode.R
 import moe.group13.routenode.data.model.Route
 import moe.group13.routenode.ui.map.MapActivity
@@ -22,6 +25,8 @@ class FavoritesFragment : Fragment() {
     private lateinit var emptyText: View
     private lateinit var progressBar: View
     private lateinit var adapter: RouteAdapter
+    private lateinit var searchEditText: TextInputEditText
+    private var allFavorites: List<Route> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,6 +42,7 @@ class FavoritesFragment : Fragment() {
         recyclerView = view.findViewById(R.id.favoritesRecyclerView)
         emptyText = view.findViewById(R.id.emptyFavoritesText)
         progressBar = view.findViewById(R.id.favoritesProgressBar)
+        searchEditText = view.findViewById(R.id.searchEditText)
 
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         adapter = RouteAdapter(
@@ -56,6 +62,15 @@ class FavoritesFragment : Fragment() {
         )
         recyclerView.adapter = adapter
 
+        // Setup search functionality
+        searchEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                filterFavorites(s?.toString() ?: "")
+            }
+        })
+
         /*
         //TESTING
         val testRoutes = getSampleFavorites()
@@ -63,8 +78,8 @@ class FavoritesFragment : Fragment() {
         updateEmptyState(testRoutes.isEmpty())
         */
         viewModel.favorites.observe(viewLifecycleOwner) { routes ->
-            adapter.update(routes)
-            updateEmptyState(routes.isEmpty())
+            allFavorites = routes
+            filterFavorites(searchEditText.text?.toString() ?: "")
         }
         // Observe loading state
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
@@ -125,25 +140,18 @@ class FavoritesFragment : Fragment() {
         val popup = PopupMenu(requireContext(), anchor)
         popup.menuInflater.inflate(R.menu.menu_item_options, popup.menu)
 
+        // Hide menu items that don't apply to favorites
+        popup.menu.findItem(R.id.action_add_favorite)?.isVisible = false
+        popup.menu.findItem(R.id.action_delete)?.isVisible = false
+
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.action_remove_favorite -> {
-                    viewModel.removeFavorite(route.id)
+                    showRemoveFavoriteDialog(route)
                     true
                 }
                 R.id.action_edit -> {
                     showEditDialog(route)
-                    true
-                }
-                R.id.action_delete -> {
-                    androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                        .setTitle("Remove Favorite")
-                        .setMessage("Are you sure you want to remove '${route.title}' from favorites?")
-                        .setPositiveButton("Remove") { _, _ ->
-                            viewModel.removeFavorite(route.id)
-                        }
-                        .setNegativeButton("Cancel", null)
-                        .show()
                     true
                 }
                 else -> false
@@ -151,8 +159,49 @@ class FavoritesFragment : Fragment() {
         }
         popup.show()
     }
+    private fun filterFavorites(query: String) {
+        val filtered = if (query.isBlank()) {
+            allFavorites
+        } else {
+            val lowerQuery = query.lowercase()
+            allFavorites.filter { route ->
+                route.title.lowercase().contains(lowerQuery) ||
+                route.description.lowercase().contains(lowerQuery) ||
+                // Search in route node data if available
+                (route.routeNodeDataJson.lowercase().contains(lowerQuery))
+            }
+        }
+        adapter.update(filtered)
+        updateEmptyState(filtered.isEmpty() && allFavorites.isNotEmpty())
+    }
+
     private fun showEditDialog(route: Route){
-        //TODO: Implement editing
+        // Check if route has node data for editing
+        if (route.routeNodeDataJson.isBlank()) {
+            androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Cannot Edit")
+                .setMessage("This favorite doesn't have editable route data. Only favorites saved from the search page can be edited.")
+                .setPositiveButton("OK", null)
+                .show()
+            return
+        }
+        
+        // Navigate to SearchFragment with route data
+        val mainActivity = activity as? moe.group13.routenode.MainActivity
+        mainActivity?.let {
+            // Switch to SearchFragment (index 0)
+            it.findViewById<androidx.viewpager2.widget.ViewPager2>(R.id.view_pager)?.currentItem = 0
+            // Pass route data via shared preferences
+            val prefs = requireContext().getSharedPreferences("route_edit", android.content.Context.MODE_PRIVATE)
+            prefs.edit().apply {
+                putString("edit_route_id", route.id)
+                putString("edit_route_title", route.title)
+                putString("edit_route_description", route.description)
+                putString("edit_route_node_data", route.routeNodeDataJson)
+                putFloat("edit_route_distance", route.distanceKm.toFloat())
+                apply()
+            }
+        }
     }
 
     private fun showRemoveFavoriteDialog(route: Route) {
