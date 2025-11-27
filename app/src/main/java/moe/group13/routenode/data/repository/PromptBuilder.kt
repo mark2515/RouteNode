@@ -13,7 +13,7 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
         val additionalRequirements: String
     )
     
-    fun buildPrompt(routeNodes: List<RouteNodeInput>, distanceUnit: String = "km"): String {
+    fun buildPrompt(routeNodes: List<RouteNodeInput>, distanceUnit: String = "km", responseLanguage: String = "English"): String {
         val promptBuilder = StringBuilder()
         
         promptBuilder.append("I need help planning a route with the following stops:\n")
@@ -99,6 +99,8 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
         promptBuilder.append("Tips:\n")
         promptBuilder.append("- Expect a short wait during peak dinner hours.\n")
         promptBuilder.append("- The salmon sashimi and House Roll are customer favourites.\n")
+        promptBuilder.append("\n")
+        promptBuilder.append("Answer in $responseLanguage.\n")
         
         return promptBuilder.toString()
     }
@@ -120,7 +122,8 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
         model: String? = null,
         temperature: Double? = null,
         maxTokens: Int? = null,
-        distanceUnit: String = "km"
+        distanceUnit: String = "km",
+        responseLanguage: String = "English"
     ): Result<String> {
         // Validate inputs
         if (routeNodes.isEmpty()) {
@@ -144,7 +147,7 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
         val defaultConfig = GptConfig.DEFAULT_CONFIG
 
         // Build the prompt
-        val prompt = buildPrompt(routeNodes, distanceUnit)
+        val prompt = buildPrompt(routeNodes, distanceUnit, responseLanguage)
 
         val apiModel = model ?: defaultConfig.model
 
@@ -165,9 +168,10 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
         model: String? = null,
         temperature: Double? = null,
         maxTokens: Int? = null,
-        distanceUnit: String = "km"
+        distanceUnit: String = "km",
+        responseLanguage: String = "English"
     ): Result<String> {
         val routeNodes = convertFromAdapterData(routeNodeData)
-        return buildAndSendPrompt(routeNodes, model, temperature, maxTokens, distanceUnit)
+        return buildAndSendPrompt(routeNodes, model, temperature, maxTokens, distanceUnit, responseLanguage)
     }
 }

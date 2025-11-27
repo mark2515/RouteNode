@@ -103,6 +103,7 @@ class SearchFragment : Fragment() {
             "max_tokens",
             defaultConfig.max_tokens
         )
+        val responseLanguage = aiPrefs.getString("language", "English") ?: "English"
 
         // Read distance unit preference from settings
         val settingsPrefs = requireContext().getSharedPreferences("route_settings", Context.MODE_PRIVATE)
@@ -115,7 +116,8 @@ class SearchFragment : Fragment() {
             model = model,
             temperature = temperature,
             maxTokens = maxTokens,
-            distanceUnit = distanceUnit
+            distanceUnit = distanceUnit,
+            responseLanguage = responseLanguage
         )
     }
     

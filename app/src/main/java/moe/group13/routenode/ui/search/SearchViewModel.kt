@@ -80,7 +80,8 @@ class SearchViewModel(
         model: String? = null,
         temperature: Double? = null,
         maxTokens: Int? = null,
-        distanceUnit: String = "km"
+        distanceUnit: String = "km",
+        responseLanguage: String = "English"
     ) {
         viewModelScope.launch {
             try {
@@ -93,7 +94,8 @@ class SearchViewModel(
                     model = model,
                     temperature = temperature,
                     maxTokens = maxTokens,
-                    distanceUnit = distanceUnit
+                    distanceUnit = distanceUnit,
+                    responseLanguage = responseLanguage
                 )
                 
                 result.onSuccess { response ->
