@@ -58,7 +58,8 @@ class FavoritesFragment : Fragment() {
             },
             isFavoriteCheck = { routeId, callback ->
                 viewModel.isFavorite(routeId, callback)
-            }
+            },
+            truncateDescription = true // Enable description truncation for favorites
         )
         recyclerView.adapter = adapter
 
@@ -110,11 +111,45 @@ class FavoritesFragment : Fragment() {
     }
 
     private fun onRouteClick(route: Route) {
-        // Handle route click - navigate to map with route
+        // Show AI advice in a popup dialog
+        val aiAdvice = if (route.description.isNotBlank()) {
+            // Check if description is AI response or just node data
+            val isAiResponse = !route.description.contains("Node") || route.description.length > 100
+            if (isAiResponse) {
+                route.description
+            } else {
+                "No AI advice available for this route."
+            }
+        } else {
+            "No AI advice available for this route."
+        }
+        
+        // Create a scrollable text view for the AI advice
+        val scrollView = android.widget.ScrollView(requireContext())
+        val textView = android.widget.TextView(requireContext())
+        textView.text = aiAdvice
+        textView.setPadding(
+            (32 * resources.displayMetrics.density).toInt(),
+            (16 * resources.displayMetrics.density).toInt(),
+            (32 * resources.displayMetrics.density).toInt(),
+            (16 * resources.displayMetrics.density).toInt()
+        )
+        textView.textSize = 14f
+        textView.setTextColor(android.graphics.Color.parseColor("#333333"))
+        textView.textAlignment = android.view.View.TEXT_ALIGNMENT_TEXT_START
+        
+        // Set max height for scroll view (about 60% of screen height)
+        val maxHeight = (resources.displayMetrics.heightPixels * 0.6).toInt()
+        scrollView.layoutParams = android.view.ViewGroup.LayoutParams(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+            maxHeight
+        )
+        scrollView.addView(textView)
+        
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("Start Route")
-            .setMessage("Do you want to go on this route: ${route.title}?")
-            .setPositiveButton("Yes") { dialog, _ ->
+            .setTitle("AI Advice: ${route.title}")
+            .setView(scrollView)
+            .setPositiveButton("Start Route") { dialog, _ ->
                 dialog.dismiss()
                 val intent = Intent(requireContext(), MapActivity::class.java).apply {
                     putExtra("EXTRA_ROUTE_NAME", route.title)
@@ -124,7 +159,7 @@ class FavoritesFragment : Fragment() {
                 }
                 startActivity(intent)
             }
-            .setNegativeButton("No") { dialog, _ ->
+            .setNegativeButton("Close") { dialog, _ ->
                 dialog.dismiss()
             }
             .show()
