@@ -21,6 +21,9 @@ class SignInActivity : AppCompatActivity() {
         firebaseAuth = FirebaseAuth.getInstance()
 
         binding.SignInBtn.setOnClickListener {
+            // Disable the button to prevent multiple clicks
+            binding.SignInBtn.isEnabled = false
+            
             val email = binding.EmailET.text.toString()
             val password = binding.PasswordET.text.toString()
 
@@ -32,11 +35,15 @@ class SignInActivity : AppCompatActivity() {
                         startActivity(intent)
                         finish()
                     } else {
+                        // Re-enable the button if sign in fails
+                        binding.SignInBtn.isEnabled = true
                         Toast.makeText(this, it.exception.toString(), Toast.LENGTH_SHORT).show()
 
                     }
                 }
             } else {
+                // Re-enable the button if validation fails
+                binding.SignInBtn.isEnabled = true
                 Toast.makeText(this, "Empty Fields Are not Allowed!! Please try again.", Toast.LENGTH_SHORT).show()
 
             }
