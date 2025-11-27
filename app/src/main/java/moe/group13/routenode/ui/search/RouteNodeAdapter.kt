@@ -149,6 +149,12 @@ class RouteNodeAdapter(
         nodeHolder.editDistance.setText(item.distance)
         nodeHolder.editAdditional.setText(item.additionalRequirements)
         
+        // Update distance unit label based on settings
+        val prefs = context.getSharedPreferences("route_settings", Context.MODE_PRIVATE)
+        val unitIndex = prefs.getInt("unit_index", 0)
+        val unitLabel = if (unitIndex == 1) "mi" else "km"
+        nodeHolder.textKm.text = unitLabel
+        
         if (item.hasTriedToSubmit) {
             RouteNodeValidationHelper.validateField(nodeHolder.editLocation, nodeHolder.errorLocation, "Location cannot be empty")
             RouteNodeValidationHelper.validateField(nodeHolder.editPlace, nodeHolder.errorPlace, "The place you're looking for cannot be empty")
@@ -380,5 +386,9 @@ class RouteNodeAdapter(
     fun cleanup() {
         autocompleteAdapters.values.forEach { it.cleanup() }
         autocompleteAdapters.clear()
+    }
+    
+    fun updateDistanceUnits() {
+        notifyItemRangeChanged(0, items.size)
     }
 }

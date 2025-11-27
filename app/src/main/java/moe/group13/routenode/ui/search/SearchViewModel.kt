@@ -79,7 +79,8 @@ class SearchViewModel(
         routeNodeData: List<RouteNodeAdapter.RouteNodeData>,
         model: String? = null,
         temperature: Double? = null,
-        maxTokens: Int? = null
+        maxTokens: Int? = null,
+        distanceUnit: String = "km"
     ) {
         viewModelScope.launch {
             try {
@@ -91,7 +92,8 @@ class SearchViewModel(
                     routeNodeData = routeNodeData,
                     model = model,
                     temperature = temperature,
-                    maxTokens = maxTokens
+                    maxTokens = maxTokens,
+                    distanceUnit = distanceUnit
                 )
                 
                 result.onSuccess { response ->

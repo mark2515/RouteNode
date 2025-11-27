@@ -91,25 +91,31 @@ class SearchFragment : Fragment() {
         val routeNodeData = routeNodeAdapter.getRouteNodeData()
 
         // Read AI settings saved from AIModelsActivity
-        val prefs = requireContext().getSharedPreferences("ai_model_settings", Context.MODE_PRIVATE)
+        val aiPrefs = requireContext().getSharedPreferences("ai_model_settings", Context.MODE_PRIVATE)
         val defaultConfig = GptConfig.DEFAULT_CONFIG
 
-        val model = prefs.getString("model", defaultConfig.model)
-        val temperature = prefs.getFloat(
+        val model = aiPrefs.getString("model", defaultConfig.model)
+        val temperature = aiPrefs.getFloat(
             "temperature",
             defaultConfig.temperature.toFloat()
         ).toDouble()
-        val maxTokens = prefs.getInt(
+        val maxTokens = aiPrefs.getInt(
             "max_tokens",
             defaultConfig.max_tokens
         )
+
+        // Read distance unit preference from settings
+        val settingsPrefs = requireContext().getSharedPreferences("route_settings", Context.MODE_PRIVATE)
+        val unitIndex = settingsPrefs.getInt("unit_index", 0)
+        val distanceUnit = if (unitIndex == 1) "mi" else "km"
 
         // Call ViewModel with the actual user input data and AI settings
         viewModel.askAIForAdviceWithRouteNodes(
             routeNodeData = routeNodeData,
             model = model,
             temperature = temperature,
-            maxTokens = maxTokens
+            maxTokens = maxTokens,
+            distanceUnit = distanceUnit
         )
     }
     
@@ -218,6 +224,14 @@ class SearchFragment : Fragment() {
         // Save as favorite
         routeViewModel.saveFavorite(route)
         Toast.makeText(requireContext(), "Route saved to favorites!", Toast.LENGTH_SHORT).show()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Update distance units when returning from settings
+        if (::routeNodeAdapter.isInitialized) {
+            routeNodeAdapter.updateDistanceUnits()
+        }
     }
     
     override fun onDestroyView() {

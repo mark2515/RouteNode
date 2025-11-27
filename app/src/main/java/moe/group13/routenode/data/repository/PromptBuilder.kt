@@ -13,7 +13,7 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
         val additionalRequirements: String
     )
     
-    fun buildPrompt(routeNodes: List<RouteNodeInput>): String {
+    fun buildPrompt(routeNodes: List<RouteNodeInput>, distanceUnit: String = "km"): String {
         val promptBuilder = StringBuilder()
         
         promptBuilder.append("I need help planning a route with the following stops:\n")
@@ -34,11 +34,17 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
         }
 
         promptBuilder.append("\n")
+        
+        val unitName = if (distanceUnit == "mi") "miles" else "kilometers"
+        promptBuilder.append("The unit of distance is $unitName.\n")
+        promptBuilder.append("\n")
+        
         promptBuilder.append("The number after 'Stop' indicates the order of the user's destinations. For example, 'Stop: 3' means it is the user's third destination.\n")
         promptBuilder.append("'Location' represents the specific address the user wants to go to.\n")
         promptBuilder.append("'The place you're looking for' refers to the type of place the user wants to find near the Location.\n")
         promptBuilder.append("'Distance' means how far the place should be from the Location.\n")
-        promptBuilder.append("For example, if the user enters 'Location: Simon Fraser University, University Drive West, Burnaby, BC, Canada', 'The place you’re looking for: an Instagrammable café', and 'Distance: 5', it means the user wants to find an Instagrammable café within 5 km of SFU.\n")
+        val distanceUnitText = if (distanceUnit == "mi") "miles" else "km"
+        promptBuilder.append("For example, if the user enters 'Location: Simon Fraser University, University Drive West, Burnaby, BC, Canada', 'The place you're looking for: an Instagrammable café', and 'Distance: 5', it means the user wants to find an Instagrammable café within 5 $distanceUnitText of SFU.\n")
         promptBuilder.append("'Additional requirements' refers to anything extra the user wants to add.\n")
         promptBuilder.append("\n")
         promptBuilder.append("Based on these requirements, please provide:\n")
@@ -67,7 +73,7 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
 
         promptBuilder.append("\n")
         promptBuilder.append("Output Example:\n")
-        promptBuilder.append("**Stop 1— Near Simon Fraser University (pizza restaurant within 2 km)**\n")
+        promptBuilder.append("**Stop 1— Near Simon Fraser University (pizza restaurant within 2 $distanceUnitText)**\n")
         promptBuilder.append("Recommended Place:\n")
         promptBuilder.append("```\n")
         promptBuilder.append("Uncle Fatih's Pizza - SFU, 9055 University High St Unit 108, Burnaby, BC V5A 0A7\n")
@@ -76,7 +82,7 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
         promptBuilder.append("- Try their spinach & feta or garlic chicken slices.\n")
         promptBuilder.append("- Usually not too busy in the afternoon.\n")
         promptBuilder.append("\n")
-        promptBuilder.append("**Stop 2 — Near Lafarge Lake (Instagrammable café within 5 km, quiet, good natural light)**\n")
+        promptBuilder.append("**Stop 2 — Near Lafarge Lake (Instagrammable café within 5 $distanceUnitText, quiet, good natural light)**\n")
         promptBuilder.append("Recommended Place:\n")
         promptBuilder.append("```\n")
         promptBuilder.append("Caffé Divano, 3003 Burlington Dr, Coquitlam, BC V3B 7T8\n")
@@ -85,7 +91,7 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
         promptBuilder.append("- Best lighting from 11 AM to 2 PM.\n")
         promptBuilder.append("- Their matcha latte and pastries are very photogenic.\n")
         promptBuilder.append("\n")
-        promptBuilder.append("**Stop 3 — Near Metrotown (sushi restaurant within 8 km)**\n")
+        promptBuilder.append("**Stop 3 — Near Metrotown (sushi restaurant within 8 $distanceUnitText)**\n")
         promptBuilder.append("Recommended Place:\n")
         promptBuilder.append("```\n")
         promptBuilder.append("Sushi Garden Metro, Kingsway, Burnaby, BC\n")
@@ -113,7 +119,8 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
         routeNodes: List<RouteNodeInput>,
         model: String? = null,
         temperature: Double? = null,
-        maxTokens: Int? = null
+        maxTokens: Int? = null,
+        distanceUnit: String = "km"
     ): Result<String> {
         // Validate inputs
         if (routeNodes.isEmpty()) {
@@ -137,7 +144,7 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
         val defaultConfig = GptConfig.DEFAULT_CONFIG
 
         // Build the prompt
-        val prompt = buildPrompt(routeNodes)
+        val prompt = buildPrompt(routeNodes, distanceUnit)
 
         val apiModel = model ?: defaultConfig.model
 
@@ -157,9 +164,10 @@ class PromptBuilder(private val openAiService: OpenAiService = OpenAiService()) 
         routeNodeData: List<RouteNodeAdapter.RouteNodeData>,
         model: String? = null,
         temperature: Double? = null,
-        maxTokens: Int? = null
+        maxTokens: Int? = null,
+        distanceUnit: String = "km"
     ): Result<String> {
         val routeNodes = convertFromAdapterData(routeNodeData)
-        return buildAndSendPrompt(routeNodes, model, temperature, maxTokens)
+        return buildAndSendPrompt(routeNodes, model, temperature, maxTokens, distanceUnit)
     }
 }
