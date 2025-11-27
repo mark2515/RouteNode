@@ -7,6 +7,7 @@ import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -39,11 +40,19 @@ class EditProfileActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_profile)
 
+        setupTopAppBar()
         initViews()
         loadExistingData()
 
         btnSave.setOnClickListener { saveProfile() }
         btnChangePhoto.setOnClickListener { pickImageLauncher.launch("image/*") }
+    }
+
+    private fun setupTopAppBar() {
+        val toolbar = findViewById<MaterialToolbar>(R.id.topAppBar)
+        toolbar.setNavigationOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
     }
 
     private fun initViews() {

@@ -4,7 +4,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.StyleSpan
+import android.text.style.UnderlineSpan
+import android.text.style.ClickableSpan
+import android.text.method.LinkMovementMethod
+import android.graphics.Typeface
+import android.view.View
 import com.google.firebase.auth.FirebaseAuth
 import moe.group13.routenode.MainActivity
 import moe.group13.routenode.databinding.ActivitySignUpBinding
@@ -22,6 +29,24 @@ class SignUpActivity : AppCompatActivity() {
 
         firebaseAuth = FirebaseAuth.getInstance()
 
+        val signInText = "Already Registered, Sign In!"
+        val spannableSignIn = SpannableString(signInText)
+        val signInStart = signInText.indexOf("Sign In")
+        val signInEnd = signInStart + "Sign In".length
+        
+        spannableSignIn.setSpan(StyleSpan(Typeface.BOLD), signInStart, signInEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannableSignIn.setSpan(UnderlineSpan(), signInStart, signInEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        
+        val clickableSpan = object : ClickableSpan() {
+            override fun onClick(widget: View) {
+                val intent = Intent(this@SignUpActivity, SignInActivity::class.java)
+                startActivity(intent)
+            }
+        }
+        spannableSignIn.setSpan(clickableSpan, signInStart, signInEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        
+        binding.SignInTV.text = spannableSignIn
+        binding.SignInTV.movementMethod = LinkMovementMethod.getInstance()
 
         binding.SignUpBtn.setOnClickListener {
             val email = binding.EmailET.text.toString()
@@ -46,10 +71,6 @@ class SignUpActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Empty fields are not allowed. Please fill out all fields.", Toast.LENGTH_SHORT).show()
             }
-        }
-        binding.SignInTV.setOnClickListener {
-            val intent = Intent(this, SignInActivity::class.java)
-            startActivity(intent)
         }
     }
 }

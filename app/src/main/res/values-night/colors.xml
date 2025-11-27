@@ -12,4 +12,7 @@
 
     <!-- Icon colors (dark theme) -->
     <color name="icon_gray">#999999</color>
+
+    <!-- Input text color -->
+    <color name="input_text">#B3B3B3</color>
 </resources>
