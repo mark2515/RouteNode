@@ -3,11 +3,15 @@ package moe.group13.routenode.ui
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
+import android.text.InputType
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.PopupMenu
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -189,6 +193,10 @@ class FavoritesFragment : Fragment() {
                     showEditDialog(route)
                     true
                 }
+                R.id.action_rename -> {
+                    showRenameDialog(route)
+                    true
+                }
                 else -> false
             }
         }
@@ -248,5 +256,53 @@ class FavoritesFragment : Fragment() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    private fun showRenameDialog(route: Route) {
+        val input = EditText(requireContext())
+        input.inputType = InputType.TYPE_CLASS_TEXT
+        input.setText(route.title)
+        input.selectAll()
+
+        val dialog = AlertDialog.Builder(requireContext())
+            .setTitle("Rename Favorite")
+            .setMessage("Enter a new name for this favorite:")
+            .setView(input)
+            .setPositiveButton("Save", null) // Set to null first, then set listener after creation
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create()
+
+        // Set positive button listener after dialog creation to control dismissal
+        dialog.setOnShowListener {
+            val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            saveButton.setOnClickListener {
+                val newName = input.text.toString().trim()
+                if (newName.isBlank()) {
+                    Toast.makeText(requireContext(), "Please enter a name", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                // Dismiss dialog immediately
+                dialog.dismiss()
+                // Use handler to ensure dialog is dismissed before saving
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                    renameFavorite(route, newName)
+                }
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun renameFavorite(route: Route, newName: String) {
+        // Create updated route with new name
+        val updatedRoute = route.copy(
+            title = newName,
+            updatedAt = System.currentTimeMillis()
+        )
+        // Save the favorite with the new name (this will overwrite the existing one)
+        viewModel.saveFavorite(updatedRoute, newName)
+        Toast.makeText(requireContext(), "Favorite renamed successfully!", Toast.LENGTH_SHORT).show()
     }
 }
