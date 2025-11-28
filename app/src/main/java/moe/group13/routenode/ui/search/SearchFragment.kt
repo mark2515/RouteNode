@@ -377,51 +377,6 @@ class SearchFragment : Fragment() {
         // Use the original name (or current editingRouteTitle if it was changed via rename dialog)
         val favoriteName = editingRouteTitle ?: "Updated Route"
         saveEditedFavoriteWithName(routeNodeData, aiResponse, favoriteName)
-
-        // Show dialog to edit the favorite name (default to original name)
-        val originalName = editingRouteTitle ?: "Updated Route"
-        val input = EditText(requireContext())
-        input.inputType = InputType.TYPE_CLASS_TEXT
-        input.setText(originalName)
-        input.selectAll()
-
-        val dialog = AlertDialog.Builder(requireContext())
-            .setTitle("Edit Favorite Name")
-            .setMessage("Enter a name for this favorite route:")
-            .setView(input)
-            .setPositiveButton("Save", null) // Set to null first, then set listener after creation
-            .setNegativeButton("Cancel") { dialog, _ ->
-                dialog.dismiss()
-                // Reset button state
-                isWaitingForAiToSave = false
-                view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.isEnabled = true
-                view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.text = "Done"
-            }
-            .create()
-
-        // Set positive button listener after dialog creation to control dismissal
-        dialog.setOnShowListener {
-            val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            saveButton.setOnClickListener {
-                val favoriteName = input.text.toString().trim()
-                if (favoriteName.isBlank()) {
-                    Toast.makeText(requireContext(), "Please enter a name", Toast.LENGTH_SHORT)
-                        .show()
-                    // Don't dismiss if validation fails
-                    return@setOnClickListener
-                }
-                // Save the name first
-                val nameToSave = favoriteName
-                // Dismiss dialog immediately
-                dialog.dismiss()
-                // Use handler to ensure dialog is dismissed before saving
-                android.os.Handler(android.os.Looper.getMainLooper()).post {
-                    saveEditedFavoriteWithName(routeNodeData, aiResponse, nameToSave)
-                }
-            }
-        }
-
-        dialog.show()
     }
 
     private fun saveEditedFavoriteWithName(
