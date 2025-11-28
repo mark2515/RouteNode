@@ -25,12 +25,59 @@
             android:layout_height="wrap_content">
 
             <TextView
-                android:text="Common places here"
-                android:textSize="16sp"
-                android:textColor="#666666"
+                android:text="Search Place"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp" />
+
+            <EditText
+                android:id="@+id/editPlace"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp" />
+                android:hint="e.g., an Instagrammable café"
+                android:inputType="text"
+                android:background="@drawable/bg_input_rect"
+                android:textColor="@color/input_text"
+                android:textColorHint="@color/input_hint"
+                android:padding="12dp"
+                android:layout_marginBottom="16dp" />
+
+            <Button
+                android:id="@+id/buttonSavePlace"
+                android:text="Save Place"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#DDDDDD"
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:text="Saved Places"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:id="@+id/tvNoPlaces"
+                android:text="No saved places yet"
+                android:textSize="14sp"
+                android:textColor="#999999"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerPlaces"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
 
         </LinearLayout>
 
