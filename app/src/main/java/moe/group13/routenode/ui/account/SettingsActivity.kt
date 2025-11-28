@@ -16,6 +16,8 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var switchUpdates: Switch
     private lateinit var spinnerTheme: Spinner
     private lateinit var spinnerUnits: Spinner
+    private lateinit var layoutCommonLocations: LinearLayout
+    private lateinit var layoutCommonPlaces: LinearLayout
     private lateinit var btnClearHistory: Button
     private lateinit var btnPermissions: Button
     private lateinit var btnHelp: Button
@@ -38,6 +40,8 @@ class SettingsActivity : AppCompatActivity() {
         switchUpdates = findViewById(R.id.switchUpdates)
         spinnerTheme = findViewById(R.id.spinnerTheme)
         spinnerUnits = findViewById(R.id.spinnerUnits)
+        layoutCommonLocations = findViewById(R.id.layoutCommonLocations)
+        layoutCommonPlaces = findViewById(R.id.layoutCommonPlaces)
         btnClearHistory = findViewById(R.id.btnClearHistory)
         btnPermissions = findViewById(R.id.btnPermissions)
         btnHelp = findViewById(R.id.btnHelp)
@@ -81,6 +85,16 @@ class SettingsActivity : AppCompatActivity() {
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+
+        layoutCommonLocations.setOnClickListener {
+            val intent = Intent(this, CommonLocationsActivity::class.java)
+            startActivity(intent)
+        }
+
+        layoutCommonPlaces.setOnClickListener {
+            val intent = Intent(this, CommonPlacesActivity::class.java)
+            startActivity(intent)
         }
 
         btnClearHistory.setOnClickListener {
