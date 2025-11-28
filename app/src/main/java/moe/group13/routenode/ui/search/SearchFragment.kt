@@ -115,7 +115,13 @@ class SearchFragment : Fragment() {
         }
         
         buttonDone.setOnClickListener {
-            saveEditedFavorite()
+            // Show confirmation dialog before saving
+            showConfirmSaveDialog()
+        }
+        
+        // Make the name clickable to edit
+        editModeText.setOnClickListener {
+            showRenameFavoriteDialog()
         }
     }
     
@@ -165,7 +171,7 @@ class SearchFragment : Fragment() {
         
         // Show edit mode banner
         view?.findViewById<MaterialCardView>(R.id.editModeBanner)?.visibility = View.VISIBLE
-        view?.findViewById<android.widget.TextView>(R.id.editModeText)?.text = "Editing: $routeTitle"
+        updateEditModeText(routeTitle)
         
         // Reset Done button to default state
         view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.isEnabled = true
@@ -185,6 +191,48 @@ class SearchFragment : Fragment() {
                 routeNodeAdapter.setAiResponse(originalDescription)
             }
         }
+    }
+    
+    private fun updateEditModeText(title: String) {
+        view?.findViewById<android.widget.TextView>(R.id.editModeText)?.text = "Editing: $title"
+    }
+    
+    private fun showRenameFavoriteDialog() {
+        val currentName = editingRouteTitle ?: "Unknown Route"
+        val input = EditText(requireContext())
+        input.inputType = InputType.TYPE_CLASS_TEXT
+        input.setText(currentName)
+        input.selectAll()
+        
+        val dialog = AlertDialog.Builder(requireContext())
+            .setTitle("Rename Favorite")
+            .setMessage("Enter a new name for this favorite:")
+            .setView(input)
+            .setPositiveButton("Save", null) // Set to null first, then set listener after creation
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create()
+        
+        // Set positive button listener after dialog creation to control dismissal
+        dialog.setOnShowListener {
+            val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            saveButton.setOnClickListener {
+                val newName = input.text.toString().trim()
+                if (newName.isBlank()) {
+                    Toast.makeText(requireContext(), "Please enter a name", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                // Update the editing route title
+                editingRouteTitle = newName
+                // Update the display text
+                updateEditModeText(newName)
+                // Dismiss dialog
+                dialog.dismiss()
+            }
+        }
+        
+        dialog.show()
     }
     
     private fun exitEditMode() {
@@ -213,6 +261,17 @@ class SearchFragment : Fragment() {
                 exitEditMode()
             }
             .setNegativeButton("No", null)
+            .show()
+    }
+    
+    private fun showConfirmSaveDialog() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Confirm Changes")
+            .setMessage("Are you sure with the changes?")
+            .setPositiveButton("OK") { _, _ ->
+                saveEditedFavorite()
+            }
+            .setNegativeButton("Cancel", null)
             .show()
     }
     
@@ -283,49 +342,9 @@ class SearchFragment : Fragment() {
             return
         }
         
-        // Show dialog to edit the favorite name (default to original name)
-        val originalName = editingRouteTitle ?: "Updated Route"
-        val input = EditText(requireContext())
-        input.inputType = InputType.TYPE_CLASS_TEXT
-        input.setText(originalName)
-        input.selectAll()
-        
-        val dialog = AlertDialog.Builder(requireContext())
-            .setTitle("Edit Favorite Name")
-            .setMessage("Enter a name for this favorite route:")
-            .setView(input)
-            .setPositiveButton("Save", null) // Set to null first, then set listener after creation
-            .setNegativeButton("Cancel") { dialog, _ ->
-                dialog.dismiss()
-                // Reset button state
-                isWaitingForAiToSave = false
-                view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.isEnabled = true
-                view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.text = "Done"
-            }
-            .create()
-        
-        // Set positive button listener after dialog creation to control dismissal
-        dialog.setOnShowListener {
-            val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            saveButton.setOnClickListener {
-                val favoriteName = input.text.toString().trim()
-                if (favoriteName.isBlank()) {
-                    Toast.makeText(requireContext(), "Please enter a name", Toast.LENGTH_SHORT).show()
-                    // Don't dismiss if validation fails
-                    return@setOnClickListener
-                }
-                // Save the name first
-                val nameToSave = favoriteName
-                // Dismiss dialog immediately
-                dialog.dismiss()
-                // Use handler to ensure dialog is dismissed before saving
-                android.os.Handler(android.os.Looper.getMainLooper()).post {
-                    saveEditedFavoriteWithName(routeNodeData, aiResponse, nameToSave)
-                }
-            }
-        }
-        
-        dialog.show()
+        // Use the original name (or current editingRouteTitle if it was changed via rename dialog)
+        val favoriteName = editingRouteTitle ?: "Updated Route"
+        saveEditedFavoriteWithName(routeNodeData, aiResponse, favoriteName)
     }
     
     private fun saveEditedFavoriteWithName(

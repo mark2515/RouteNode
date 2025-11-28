@@ -33,7 +33,11 @@
                 android:text="Editing: Route Name"
                 android:textColor="#E65100"
                 android:textStyle="bold"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground"
+                android:padding="8dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/buttonCancelEdit"
