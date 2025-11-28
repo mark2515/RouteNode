@@ -5,11 +5,6 @@ import com.google.android.gms.maps.model.LatLng
 //class used to format pin
 //@TODO: Maybe be relevant to junh
 data class UserPin (
-    //@TODO: User ID here?
-    //first destination name
-    val destination: List<String>,
-    //username?
-    val userName: String,
-    //location
-    val location : List<LatLng>
+    val title: String = "",
+    val waypoints: List<LatLng> = emptyList()
 )
