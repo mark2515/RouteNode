@@ -110,4 +110,8 @@ class SearchViewModel(
             }
         }
     }
+    
+    fun clearAiResponse() {
+        aiResponse.value = null
+    }
 }

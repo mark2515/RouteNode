@@ -81,11 +81,20 @@ class RouteViewModel(
         }
     }
 
-    fun saveFavorite(route: Route) = viewModelScope.launch {
+    fun saveFavorite(route: Route, favoriteName: String? = null) = viewModelScope.launch {
         try {
             isLoading.value = true
             errorMessage.value = null
-            val success = repo.saveFavorite(route)
+            // If favoriteName is provided, update the route title
+            val routeToSave = if (favoriteName != null && favoriteName.isNotBlank()) {
+                route.copy(title = favoriteName)
+            } else {
+                // Generate default name based on favorite count
+                val currentFavorites = favorites.value ?: emptyList()
+                val defaultName = "favorite-${currentFavorites.size + 1}"
+                route.copy(title = defaultName)
+            }
+            val success = repo.saveFavorite(routeToSave)
             if (success) {
                 loadFavorites()
             } else {

@@ -383,6 +383,14 @@ class RouteNodeAdapter(
         return items.toList()
     }
     
+    fun setRouteNodeData(newData: List<RouteNodeData>) {
+        items.clear()
+        items.addAll(newData.mapIndexed { index, data -> 
+            data.copy(no = index + 1)
+        })
+        notifyDataSetChanged()
+    }
+    
     fun cleanup() {
         autocompleteAdapters.values.forEach { it.cleanup() }
         autocompleteAdapters.clear()
@@ -390,5 +398,13 @@ class RouteNodeAdapter(
     
     fun updateDistanceUnits() {
         notifyItemRangeChanged(0, items.size)
+    }
+    
+    fun reset() {
+        items.clear()
+        items.add(RouteNodeData(no = 1))
+        aiResponse = null
+        notifyDataSetChanged()
+        notifyValidationChanged()
     }
 }
