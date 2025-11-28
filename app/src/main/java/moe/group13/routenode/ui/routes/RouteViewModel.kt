@@ -90,8 +90,8 @@ class RouteViewModel(
                 route.copy(title = favoriteName)
             } else {
                 // Generate default name based on favorite count
-                val currentFavorites = favorites.value ?: emptyList()
-                val defaultName = "favorite-${currentFavorites.size + 1}"
+                val count = repo.getFavoritesCount()
+                val defaultName = "favorite-${count + 1}"
                 route.copy(title = defaultName)
             }
             val success = repo.saveFavorite(routeToSave)
@@ -195,6 +195,15 @@ class RouteViewModel(
             errorMessage.value = "Failed to remove favorite: ${e.message}"
         } finally {
             isLoading.value = false
+        }
+    }
+
+    suspend fun getNextDefaultFavoriteName(): String {
+        return try {
+            val count = repo.getFavoritesCount()
+            "favorite-${count + 1}"
+        } catch (e: Exception) {
+            "favorite-1"
         }
     }
 }

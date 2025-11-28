@@ -224,4 +224,19 @@ class RouteRepository(
             emptyList()
         }
     }
+
+    suspend fun getFavoritesCount(): Int {
+        return try {
+            val currentUid = uid()
+            val snapshot = favoritesCollection
+                .document(currentUid)
+                .collection("routes")
+                .get()
+                .await()
+            snapshot.size()
+        } catch (e: Exception) {
+            Log.e("ROUTE_REPO", "Error getting favorites count", e)
+            0
+        }
+    }
 }
