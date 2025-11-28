@@ -37,6 +37,7 @@ class SearchFragment : Fragment() {
     private var editingRouteId: String? = null
     private var editingRouteTitle: String? = null
     private var isWaitingForAiToSave = false // Flag to track if we're waiting for AI response before saving
+    private var originalRouteNodeDataJson: String? = null // Store original route data to detect changes
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -130,6 +131,8 @@ class SearchFragment : Fragment() {
                 val gson = Gson()
                 val routeNodeData = gson.fromJson(routeNodeDataJson, Array<RouteNodeAdapter.RouteNodeData>::class.java).toList()
                 if (routeNodeData.isNotEmpty() && ::routeNodeAdapter.isInitialized) {
+                    // Store original JSON BEFORE setting data to adapter
+                    originalRouteNodeDataJson = routeNodeDataJson
                     // Enter edit mode
                     enterEditMode(routeId, routeTitle ?: "Unknown Route", routeDescription)
                     routeNodeAdapter.setRouteNodeData(routeNodeData)
@@ -156,6 +159,9 @@ class SearchFragment : Fragment() {
         
         // Reset the waiting flag
         isWaitingForAiToSave = false
+        
+        // Note: originalRouteNodeDataJson should already be set in checkForEditRoute()
+        // before calling this function
         
         // Show edit mode banner
         view?.findViewById<MaterialCardView>(R.id.editModeBanner)?.visibility = View.VISIBLE
@@ -186,6 +192,7 @@ class SearchFragment : Fragment() {
         editingRouteId = null
         editingRouteTitle = null
         isWaitingForAiToSave = false
+        originalRouteNodeDataJson = null
         
         // Hide edit mode banner
         view?.findViewById<MaterialCardView>(R.id.editModeBanner)?.visibility = View.GONE
@@ -229,15 +236,31 @@ class SearchFragment : Fragment() {
             return
         }
         
-        // Set flag to wait for AI response before saving
-        isWaitingForAiToSave = true
+        // Check if route data has changed by comparing JSON
+        val gson = Gson()
+        val currentRouteNodeDataJson = gson.toJson(routeNodeData)
+        val hasRouteChanged = currentRouteNodeDataJson != originalRouteNodeDataJson
         
-        // Disable Done button and show loading state
-        view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.isEnabled = false
-        view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.text = "Generating AI advice..."
+        android.util.Log.d("SearchFragment", "Original JSON: ${originalRouteNodeDataJson?.take(100)}")
+        android.util.Log.d("SearchFragment", "Current JSON: ${currentRouteNodeDataJson.take(100)}")
+        android.util.Log.d("SearchFragment", "Has route changed: $hasRouteChanged")
         
-        // Automatically generate AI advice with current route data
-        askAIForAdvice()
+        if (!hasRouteChanged && originalRouteNodeDataJson != null) {
+            // No changes to route data, save directly without generating new AI
+            android.util.Log.d("SearchFragment", "No changes detected, saving without AI generation")
+            performSaveAfterAi()
+        } else {
+            // Route data has changed, generate new AI advice
+            // Set flag to wait for AI response before saving
+            isWaitingForAiToSave = true
+            
+            // Disable Done button and show loading state
+            view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.isEnabled = false
+            view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.text = "Generating AI advice..."
+            
+            // Automatically generate AI advice with current route data
+            askAIForAdvice()
+        }
     }
     
     private fun performSaveAfterAi() {
@@ -252,6 +275,64 @@ class SearchFragment : Fragment() {
             return
         }
         
+        if (editingRouteId == null) {
+            Toast.makeText(requireContext(), "Error: Route ID not found", Toast.LENGTH_SHORT).show()
+            isWaitingForAiToSave = false
+            view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.isEnabled = true
+            view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.text = "Done"
+            return
+        }
+        
+        // Show dialog to edit the favorite name (default to original name)
+        val originalName = editingRouteTitle ?: "Updated Route"
+        val input = EditText(requireContext())
+        input.inputType = InputType.TYPE_CLASS_TEXT
+        input.setText(originalName)
+        input.selectAll()
+        
+        val dialog = AlertDialog.Builder(requireContext())
+            .setTitle("Edit Favorite Name")
+            .setMessage("Enter a name for this favorite route:")
+            .setView(input)
+            .setPositiveButton("Save", null) // Set to null first, then set listener after creation
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+                // Reset button state
+                isWaitingForAiToSave = false
+                view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.isEnabled = true
+                view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.text = "Done"
+            }
+            .create()
+        
+        // Set positive button listener after dialog creation to control dismissal
+        dialog.setOnShowListener {
+            val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            saveButton.setOnClickListener {
+                val favoriteName = input.text.toString().trim()
+                if (favoriteName.isBlank()) {
+                    Toast.makeText(requireContext(), "Please enter a name", Toast.LENGTH_SHORT).show()
+                    // Don't dismiss if validation fails
+                    return@setOnClickListener
+                }
+                // Save the name first
+                val nameToSave = favoriteName
+                // Dismiss dialog immediately
+                dialog.dismiss()
+                // Use handler to ensure dialog is dismissed before saving
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                    saveEditedFavoriteWithName(routeNodeData, aiResponse, nameToSave)
+                }
+            }
+        }
+        
+        dialog.show()
+    }
+    
+    private fun saveEditedFavoriteWithName(
+        routeNodeData: List<RouteNodeAdapter.RouteNodeData>,
+        aiResponse: String?,
+        favoriteName: String
+    ) {
         if (editingRouteId == null) {
             Toast.makeText(requireContext(), "Error: Route ID not found", Toast.LENGTH_SHORT).show()
             isWaitingForAiToSave = false
@@ -288,10 +369,10 @@ class SearchFragment : Fragment() {
         val gson = Gson()
         val routeNodeDataJson = gson.toJson(routeNodeData)
         
-        // Create updated Route object with same ID
+        // Create updated Route object with same ID and new name
         val updatedRoute = Route(
             id = editingRouteId!!,
-            title = editingRouteTitle ?: "Updated Route",
+            title = favoriteName,
             description = routeDescription,
             waypoints = emptyList(),
             distanceKm = totalDistance,
@@ -310,7 +391,7 @@ class SearchFragment : Fragment() {
         )
         
         // Update the favorite by saving with the same ID (will overwrite existing)
-        routeViewModel.saveFavorite(updatedRoute, editingRouteTitle ?: "Updated Route")
+        routeViewModel.saveFavorite(updatedRoute, favoriteName)
         
         Toast.makeText(requireContext(), "Favorite updated successfully!", Toast.LENGTH_SHORT).show()
         
