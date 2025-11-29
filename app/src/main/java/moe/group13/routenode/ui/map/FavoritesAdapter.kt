@@ -11,14 +11,19 @@ import moe.group13.routenode.data.model.Route
 
 class FavoritesAdapter(
     private val favorites: List<Route>,
-    private val onItemClick: (Route) -> Unit,
-    private val onButtonClick: (Route) -> Unit
+    private val onGoClick: (Route) -> Unit,
+    private val onPreviewClick: (Route) -> Unit,
+    private val onEditClick: (Route) -> Unit
 ) :
     RecyclerView.Adapter<FavoritesAdapter.FavoriteViewHolder>() {
 
     class FavoriteViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
         val title: TextView = view.findViewById(R.id.favorite_title)
-        val button: Button = view.findViewById(R.id.go_button)
+        val goButton: Button = view.findViewById(R.id.go_button)
+
+        val previewButton: Button = view.findViewById(R.id.preview_button)
+        val editButton: Button = view.findViewById(R.id.edit_button)
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavoriteViewHolder {
@@ -34,11 +39,16 @@ class FavoritesAdapter(
     override fun onBindViewHolder(holder: FavoriteViewHolder, position: Int) {
         val favorite = favorites[position]
         holder.title.text = favorite.title
-        holder.itemView.setOnClickListener {
-            onItemClick(favorite)
+
+        holder.goButton.setOnClickListener {
+            onGoClick(favorite)
         }
-        holder.button.setOnClickListener {
-            onButtonClick(favorite)
+        holder.previewButton.setOnClickListener {
+            onPreviewClick(favorite)
         }
+        holder.editButton.setOnClickListener {
+            onEditClick(favorite)
+        }
+
     }
 }
