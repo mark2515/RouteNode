@@ -10,15 +10,16 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/black"
-        app:titleTextColor="@color/white"
         app:title="Common Locations"
+        app:titleTextColor="@color/white"
         app:navigationIcon="@drawable/ic_arrow_back_24" />
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:padding="20dp">
+        android:padding="20dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:orientation="vertical"
@@ -38,21 +39,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="e.g., 750 Maple Ave"
-                android:inputType="text"
-                android:background="@drawable/bg_input_rect"
-                android:textColor="@color/input_text"
-                android:textColorHint="@color/input_hint"
                 android:padding="12dp"
-                android:completionThreshold="3"
                 android:layout_marginBottom="16dp" />
 
             <Button
                 android:id="@+id/buttonSaveLocation"
-                android:text="Save Location"
-                android:backgroundTint="@color/black"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp" />
+                android:text="Save Location"
+                android:layout_marginBottom="24dp"
+                android:backgroundTint="@color/black" />
 
             <View
                 android:layout_width="match_parent"
@@ -80,10 +76,10 @@
                 android:id="@+id/recyclerLocations"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:visibility="gone" />
+                android:nestedScrollingEnabled="false"
+                android:visibility="visible" />
 
         </LinearLayout>
-
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>
