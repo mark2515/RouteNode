@@ -119,11 +119,8 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         btnAbout.setOnClickListener {
-            AlertDialog.Builder(this)
-                .setTitle("About RouteNode")
-                .setMessage("RouteNode version 1.0.0\nDeveloped by Group 13")
-                .setPositiveButton("OK", null)
-                .show()
+            val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://route-node-webpage.vercel.app/"))
+            startActivity(intent)
         }
     }
 
