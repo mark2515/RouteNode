@@ -23,6 +23,18 @@ class SignInActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        firebaseAuth = FirebaseAuth.getInstance()
+
+        // Check if user is already signed in
+        val currentUser = firebaseAuth.currentUser
+        if (currentUser != null) {
+            // Redirect to MainActivity
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
+
         binding = ActivitySignInBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
