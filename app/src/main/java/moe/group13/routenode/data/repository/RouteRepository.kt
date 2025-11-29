@@ -244,6 +244,29 @@ class RouteRepository(
         }
     }
 
+    // Clear all favorites for the current user
+    suspend fun clearAllFavorites(): Boolean {
+        return try {
+            val currentUid = uid()
+            val snapshot = favoritesCollection
+                .document(currentUid)
+                .collection("routes")
+                .get()
+                .await()
+
+            // Delete each document in the collection
+            for (document in snapshot.documents) {
+                document.reference.delete().await()
+            }
+
+            Log.d("ROUTE_REPO", "Cleared all favorites for user: $currentUid")
+            true
+        } catch (e: Exception) {
+            Log.e("ROUTE_REPO", "Error clearing favorites", e)
+            false
+        }
+    }
+
     //fetch routeById
     suspend fun getCurrentUserFavoriteRouteById(routeId: String): Route? {
         val currentUid = try {

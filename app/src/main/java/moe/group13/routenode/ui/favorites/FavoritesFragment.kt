@@ -141,6 +141,7 @@ class FavoritesFragment : Fragment() {
         textView.textSize = 14f
         textView.setTextColor(android.graphics.Color.parseColor("#333333"))
         textView.textAlignment = android.view.View.TEXT_ALIGNMENT_TEXT_START
+        textView.setTextIsSelectable(true)
         
         // Set max height for scroll view (about 60% of screen height)
         val maxHeight = (resources.displayMetrics.heightPixels * 0.6).toInt()
@@ -151,7 +152,7 @@ class FavoritesFragment : Fragment() {
         scrollView.addView(textView)
         
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setTitle("AI Advice: ${route.title}")
+            .setTitle("${route.title}")
             .setView(scrollView)
             .setPositiveButton("Start Route") { dialog, _ ->
                 dialog.dismiss()
