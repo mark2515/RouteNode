@@ -39,6 +39,8 @@
                 android:hint="e.g., 750 Maple Ave"
                 android:inputType="text"
                 android:background="@drawable/bg_input_rect"
+                android:textColor="@color/input_text"
+                android:textColorHint="@color/input_hint"
                 android:padding="12dp"
                 android:completionThreshold="3"
                 android:layout_marginBottom="16dp" />
