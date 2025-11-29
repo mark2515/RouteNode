@@ -47,6 +47,22 @@ class SettingsViewModel : ViewModel() {
                 savedLocations.value = list
             }
     }
+
+    fun deleteLocation(name: String, address: String) {
+        if (uid == null) return
+
+        firestore.collection("users")
+            .document(uid)
+            .collection("saved_locations")
+            .whereEqualTo("name", name)
+            .whereEqualTo("address", address)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                for (doc in snapshot.documents) {
+                    doc.reference.delete()
+                }
+            }
+    }
 }
 
 data class LocationItem(
