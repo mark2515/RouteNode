@@ -22,6 +22,7 @@ class RouteNodeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     val errorLocation: TextView = itemView.findViewById(R.id.errorLocation)
     val errorPlace: TextView = itemView.findViewById(R.id.errorPlace)
     val errorDistance: TextView = itemView.findViewById(R.id.errorDistance)
+    val textKm: TextView = itemView.findViewById(R.id.textKm)
 }
 
 class FooterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

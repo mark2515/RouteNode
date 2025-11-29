@@ -5,6 +5,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import moe.group13.routenode.R
@@ -22,12 +23,21 @@ class ChangePasswordActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_change_password)
 
+        setupTopAppBar()
+
         oldPassword = findViewById(R.id.inputOldPassword)
         newPassword = findViewById(R.id.inputNewPassword)
         confirmPassword = findViewById(R.id.inputConfirmPassword)
         updateBtn = findViewById(R.id.btnUpdatePassword)
 
         updateBtn.setOnClickListener { updatePassword() }
+    }
+
+    private fun setupTopAppBar() {
+        val toolbar = findViewById<MaterialToolbar>(R.id.topAppBar)
+        toolbar.setNavigationOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
     }
 
     private fun updatePassword() {

@@ -1,122 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:padding="20dp"
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/topAppBar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/black"
+        app:titleTextColor="@color/white"
+        app:title="My Profile"
+        app:navigationIcon="@drawable/ic_arrow_back_24" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <LinearLayout
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:padding="20dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <ImageView
-                android:id="@+id/profileImage"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:src="@drawable/ic_profile_placeholder"
-                android:scaleType="centerCrop"
-                android:background="@drawable/circle_bg"
-                android:padding="4dp"
-                android:layout_marginEnd="20dp" />
-
             <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <TextView
-                    android:id="@+id/tvName"
-                    android:text="John Smith"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                <ImageView
+                    android:id="@+id/profileImage"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:src="@drawable/ic_profile_placeholder"
+                    android:scaleType="centerCrop"
+                    android:background="@drawable/circle_bg"
+                    android:padding="4dp"
+                    android:layout_marginEnd="20dp" />
 
-                <TextView
-                    android:id="@+id/tvEmail"
-                    android:text="johnsmith1131@gmail.com"
-                    android:textSize="14sp"
-                    android:textColor="#777"
+                <LinearLayout
+                    android:orientation="vertical"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/tvName"
+                        android:text="John Smith"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/tvEmail"
+                        android:text="johnsmith1131@gmail.com"
+                        android:textSize="14sp"
+                        android:textColor="#777"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
             </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#DDDDDD"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="20dp" />
+
+            <TextView
+                android:text="Preferences"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:text="Preferred Theme"
+                android:layout_marginTop="10dp"
+                android:textSize="16sp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/tvPreferredTheme"
+                android:text="System Default"
+                android:textColor="#555"
+                android:layout_marginBottom="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:text="Preferred Distance"
+                android:textSize="16sp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/tvPreferredDistance"
+                android:text="Kilometers"
+                android:textColor="#555"
+                android:layout_marginBottom="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <Button
+                android:id="@+id/btnEditProfile"
+                android:text="Edit Profile"
+                android:backgroundTint="@color/black"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp" />
+
+            <Button
+                android:id="@+id/btnChangePassword"
+                android:text="Change Password"
+                android:backgroundTint="@color/black"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
         </LinearLayout>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#DDDDDD"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="20dp"/>
+    </ScrollView>
 
-        <TextView
-            android:text="Preferences"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:text="Favorite Cuisine"
-            android:layout_marginTop="10dp"
-            android:textSize="16sp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/tvCuisine"
-            android:text="Coffee, Brunch, Korean"
-            android:textColor="#555"
-            android:layout_marginBottom="10dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:text="Travel Mode"
-            android:textSize="16sp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/tvTravelMode"
-            android:text="Walking"
-            android:textColor="#555"
-            android:layout_marginBottom="10dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:text="Preferred Distance"
-            android:textSize="16sp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/tvDistance"
-            android:text="1 km"
-            android:textColor="#555"
-            android:layout_marginBottom="20dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <Button
-            android:id="@+id/btnEditProfile"
-            android:text="Edit Profile"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp" />
-
-        <Button
-            android:id="@+id/btnChangePassword"
-            android:text="Change Password"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
-
-</ScrollView>
+</LinearLayout>

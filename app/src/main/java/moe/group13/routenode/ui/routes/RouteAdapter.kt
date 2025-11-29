@@ -15,7 +15,8 @@ class RouteAdapter(
     private val onClick: (Route) -> Unit,
     private val onMenuClick: (Route, View) -> Unit,
     private val onFavoriteClick: ((Route) -> Unit)? = null,
-    private val isFavoriteCheck: ((String, (Boolean) -> Unit) -> Unit)? = null
+    private val isFavoriteCheck: ((String, (Boolean) -> Unit) -> Unit)? = null,
+    private val truncateDescription: Boolean = false // Whether to truncate description to 2-3 sentences
 ): RecyclerView.Adapter<RouteAdapter.RouteViewHolder>() {
     inner class RouteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title: TextView = itemView.findViewById(R.id.route_title)
@@ -34,7 +35,15 @@ class RouteAdapter(
         val route = routes[position]
         //routename: Location and Place looking for
         holder.title.text = route.title
-        holder.description.text = route.description
+        
+        // Truncate description to 2-3 sentences if needed
+        val displayDescription = if (truncateDescription && route.description.isNotBlank()) {
+            truncateToSentences(route.description, maxSentences = 3)
+        } else {
+            route.description
+        }
+        holder.description.text = displayDescription
+        
         holder.distance.text = "${route.distanceKm} km"
 
         // Update favorite icon state
@@ -81,5 +90,26 @@ class RouteAdapter(
     fun update(newRoutes: List<Route>) {
         routes = newRoutes
         notifyDataSetChanged()
+    }
+    
+    private fun truncateToSentences(text: String, maxSentences: Int = 3): String {
+        if (text.isBlank()) {
+            return text
+        }
+        
+        // Split by sentence endings (. ! ?) followed by space or end of string
+        val sentences = text.split(Regex("(?<=[.!?])(?=\\s|$)"))
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+        
+        if (sentences.size <= maxSentences) {
+            return text
+        }
+        
+        // Take first maxSentences sentences
+        val truncated = sentences.take(maxSentences).joinToString(" ")
+        
+        // Add "...more" at the end
+        return "$truncated...more"
     }
 }

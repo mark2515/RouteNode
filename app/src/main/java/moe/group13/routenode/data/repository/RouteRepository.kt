@@ -1,8 +1,12 @@
 package moe.group13.routenode.data.repository
 
 import android.util.Log
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.GeoPoint
 import kotlinx.coroutines.tasks.await
 import moe.group13.routenode.data.model.Route
 
@@ -224,4 +228,137 @@ class RouteRepository(
             emptyList()
         }
     }
+
+    suspend fun getFavoritesCount(): Int {
+        return try {
+            val currentUid = uid()
+            val snapshot = favoritesCollection
+                .document(currentUid)
+                .collection("routes")
+                .get()
+                .await()
+            snapshot.size()
+        } catch (e: Exception) {
+            Log.e("ROUTE_REPO", "Error getting favorites count", e)
+            0
+        }
+    }
+
+    // Clear all favorites for the current user
+    suspend fun clearAllFavorites(): Boolean {
+        return try {
+            val currentUid = uid()
+            val snapshot = favoritesCollection
+                .document(currentUid)
+                .collection("routes")
+                .get()
+                .await()
+
+            // Delete each document in the collection
+            for (document in snapshot.documents) {
+                document.reference.delete().await()
+            }
+
+            Log.d("ROUTE_REPO", "Cleared all favorites for user: $currentUid")
+            true
+        } catch (e: Exception) {
+            Log.e("ROUTE_REPO", "Error clearing favorites", e)
+            false
+        }
+    }
+
+    //fetch routeById
+    suspend fun getCurrentUserFavoriteRouteById(routeId: String): Route? {
+        val currentUid = try {
+            uid()
+        } catch (e: Exception) {
+            Log.e("ROUTE_REPO", "User not logged in", e)
+            return null
+        }
+        return try {
+            val doc = favoritesCollection
+                .document(currentUid)
+                .collection("routes")
+                .document(routeId)
+                .get()
+                .await()
+            doc.toObject(Route::class.java)
+        } catch (e: Exception) {
+            Log.e("ROUTE_REPO", "Error getting favorite route", e)
+            null
+        }
+    }
+
+    //swap tag and latlng
+    fun swap(routeId: String, oldTag: String, newTag: String, newLatLng: LatLng ) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid == null) {
+            Log.e("MapEditFragment", "User not logged in")
+            return
+        }
+        val docRef = FirebaseFirestore.getInstance()
+            .collection("favorites")
+            .document(uid)
+            .collection("routes")
+            .document(routeId)
+
+        docRef.get()
+            .addOnSuccessListener { document ->
+                if (!document.exists()) {
+                    Log.e("MapEditFragment", "Route does not exist: $routeId")
+                    return@addOnSuccessListener
+                }
+                //pull old arrays
+                val oldTags = document.get("tags") as? List<String>
+                val oldWaypoints = document.get("waypoints") as? List<GeoPoint>
+
+                if (oldTags == null || oldWaypoints == null) {
+                    Log.e("MapEditFragment", "No tags found in route")
+                    return@addOnSuccessListener
+                }
+
+                Log.d("MapEditFragment", "Original tags: $oldTags")
+
+                // create copies
+                val updatedTags = oldTags.toMutableList()
+                val updatedWaypoints = oldWaypoints.toMutableList()
+
+                // find index  of oldTag, replace
+                val index = updatedTags.indexOf(oldTag)
+
+                //convert newLatLng to GeoPoint
+                val newGeoPoint = GeoPoint(newLatLng.latitude, newLatLng.longitude)
+                updatedWaypoints[index] = newGeoPoint
+
+                //newTag = index of oldtag
+                updatedTags[index] = newTag
+
+                docRef.update("waypoints", updatedWaypoints)
+
+                // send array back into firebase
+                docRef.update("tags", updatedTags)
+                    .addOnSuccessListener {
+                        Log.d("MapEditFragment", "Successfully swapped $oldTag -> $newTag")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("MapEditFragment", "Failed to update tags", e)
+                    }
+                // update description to show that it was tweaked by the user
+                val newDescription = "User created: ${updatedTags.joinToString(", ")}"
+                docRef.update("description", newDescription)
+                    .addOnSuccessListener {
+                        Log.d("MapEditFragment", "Successfully updated description")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("MapEditFragment", "Failed to update description", e)
+                    }
+            }
+            .addOnFailureListener { e ->
+                Log.e("MapEditFragment", "Failed to fetch route", e)
+            }
+
+    }
+
+
+
 }

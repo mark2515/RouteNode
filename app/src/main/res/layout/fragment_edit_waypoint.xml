@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <!-- Google Places Autocomplete Fragment -->
+    <fragment
+        android:id="@+id/autocomplete_fragment"
+        android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toStartOf="@+id/swapButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Swap -->
+    <Button
+        android:id="@+id/swapButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Swap"
+        android:backgroundTint="@color/black"
+        app:layout_constraintBottom_toBottomOf="@id/autocomplete_fragment"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/autocomplete_fragment" />
+
+    <!-- Checkbox list -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewTags"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/autocomplete_fragment" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

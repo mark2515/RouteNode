@@ -1,15 +1,20 @@
 package moe.group13.routenode.ui.routes
 
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.PopupMenu
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.launch
 import moe.group13.routenode.R
 import moe.group13.routenode.data.model.Route
 
@@ -72,8 +77,7 @@ class RouteListFragment : Fragment() {
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.action_add_favorite -> {
-                    viewModel.saveFavorite(route)
-                    Toast.makeText(requireContext(), "Added to favorites", Toast.LENGTH_SHORT).show()
+                    showFavoriteNameDialog(route)
                     true
                 }
                 R.id.action_remove_favorite -> {
@@ -95,5 +99,34 @@ class RouteListFragment : Fragment() {
             }
         }
         popup.show()
+    }
+    
+    private fun showFavoriteNameDialog(route: Route) {
+        // Get current favorite count for default name
+        lifecycleScope.launch {
+            val defaultName = viewModel.getNextDefaultFavoriteName()
+            
+            // Show dialog to name the favorite
+            val input = EditText(requireContext())
+            input.inputType = InputType.TYPE_CLASS_TEXT
+            input.setText(defaultName)
+            input.selectAll()
+            
+            AlertDialog.Builder(requireContext())
+                .setTitle("Name Your Favorite")
+                .setMessage("Enter a name for this favorite route:")
+                .setView(input)
+                .setPositiveButton("Save") { _, _ ->
+                    val favoriteName = input.text.toString().trim()
+                    if (favoriteName.isBlank()) {
+                        Toast.makeText(requireContext(), "Please enter a name", Toast.LENGTH_SHORT).show()
+                        return@setPositiveButton
+                    }
+                    viewModel.saveFavorite(route, favoriteName)
+                    Toast.makeText(requireContext(), "Added to favorites", Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
     }
 }

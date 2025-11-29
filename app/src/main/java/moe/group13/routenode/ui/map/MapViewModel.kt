@@ -1,161 +1,115 @@
 package moe.group13.routenode.ui.map
 
-
-import android.text.Html
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.PolyUtil
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.*
+import moe.group13.routenode.data.model.Route
+import moe.group13.routenode.data.repository.RouteRepository
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.json.JSONObject
 import java.io.IOException
 
+class MapViewModel(private val repository: RouteRepository) : ViewModel() {
 
-class MapViewModel : ViewModel() {
-    val polylinePoints = MutableLiveData<List<LatLng>>()
-    val instructionsText = MutableLiveData<String>()
-    val errorMessage = MutableLiveData<String?>()
+    // Favorites
+    private val _favorites = MutableLiveData<List<Route>>()
+    val favorites: LiveData<List<Route>> = _favorites
 
+    // Polyline points from Directions API
+    private val _polylinePoints = MutableLiveData<List<LatLng>>()
+    val polylinePoints: LiveData<List<LatLng>> = _polylinePoints
 
-    //fetch user pins for their first destination in the route, so user can look
-    //TODO: junhp: Fetch the pins from the database
-    fun fetchUserStarts(): List<UserPin> {
-        return testPins()
-    }
+    // Optional: errors
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String?> = _errorMessage
 
-    //runs on IO Thread (Background)
-    @Deprecated("Moving to Google Maps")
-    suspend fun fetchDirections(
-        origin: LatLng?, destination: LatLng, waypoints: List<LatLng>,
-        apiKey: String, mode: String
-    ) {
-        try {
-            withContext(Dispatchers.IO) {
-                //begin constructing the waypoint parameter for api call
-                val waypointsParam = if (waypoints.isNotEmpty()) {
-                    "&waypoints=" + waypoints.joinToString("|") { "${it.latitude},${it.longitude}" }
-                } else {
-                    ""
-                }
-
-                val url = "https://maps.googleapis.com/maps/api/directions/json?" +
-                        "origin=${origin?.latitude},${origin?.longitude}" +
-                        "&destination=${destination.latitude},${destination.longitude}" +
-                        "&mode=$mode" +
-                        waypointsParam +
-                        "&key=$apiKey"
-
-                val client = OkHttpClient()
-                val request = Request.Builder().url(url).build()
-                val response = client.newCall(request).execute()
-                if (!response.isSuccessful) {
-                    throw IOException("HTTP error")
-                }
-                val body = response.body?.string() ?: throw IOException("Empty Response")
-                val json = JSONObject(body)
-                val routes = json.getJSONArray("routes")
-                if (routes.length() == 0) {
-                    throw IOException("No routes found")
-                }
-
-                // Polyline
-                val overviewPolyline =
-                    routes.getJSONObject(0).getJSONObject("overview_polyline")
-                        .getString("points")
-                val path: List<LatLng> = PolyUtil.decode(overviewPolyline)
-                polylinePoints.postValue(path)
-
-                // Step-by-step travel instructions
-                //route: Google will always return 1 route, will return more if AlternativeRoute flag is set
-                val legs = routes.getJSONObject(0).getJSONArray("legs")
-                val instructions = StringBuilder()
-
-                //legs: Leg of Journey, the waypoints
-                for (legIndex in 0 until legs.length()) {
-                    val leg = legs.getJSONObject(legIndex)
-                    val startAddress = leg.getString("start_address")
-                    val endAddress = leg.getString("end_address")
-                    instructions.append("Route from $startAddress to $endAddress:\n\n")
-                    val steps = leg.getJSONArray("steps")
-                    for (i in 0 until steps.length()) {
-                        val step = steps.getJSONObject(i)
-                        val travelMode = step.getString("travel_mode")
-                        // Transit mode is a mixture of WALKING and TRANSIT
-                        //T ranist has specific fields
-                        if (travelMode == "TRANSIT") {
-                            val transit = step.getJSONObject("transit_details")
-                            val departure =
-                                transit.getJSONObject("departure_stop")
-                                    .getString("name")
-                            val arrival =
-                                transit.getJSONObject("arrival_stop").getString("name")
-                            val lineObj = transit.getJSONObject("line")
-                            val line =
-                                if (lineObj.has("short_name")) lineObj.getString("short_name")
-                                else lineObj.getString("name")
-                            val headsign = transit.getString("headsign")
-                            instructions.append("Take $line toward $headsign from $departure to $arrival\n\n")
-                        } else {
-                            val htmlInstruction = step.getString("html_instructions")
-                            instructions.append(Html.fromHtml(htmlInstruction))
-                            instructions.append("\n\n")
-                        }
-                    }
-                }
-                instructionsText.postValue(instructions.toString())
+    fun loadFavorites() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val favList = repository.getFavorites()
+                _favorites.postValue(favList)
+            } catch (e: Exception) {
+                _favorites.postValue(emptyList())
+                _errorMessage.postValue(e.message)
             }
-
-        } catch (e: Exception) {
-
         }
     }
 
-    //TESTING
-    fun testPins(): List<UserPin> {
-        return listOf(
-            UserPin(
-                destination = listOf("Stanley Park", "Granville Island"),
-                userName = "edengler01",
-                location = listOf(
-                    LatLng(49.3043, -123.1443), // Stanley Park
-                    LatLng(49.2715, -123.1341)  // Granville Island
-                )
-            ),
-            UserPin(
-                destination = listOf("Downtown Vancouver", "Queen Elizabeth Park"),
-                userName = "user02",
-                location = listOf(
-                    LatLng(49.2827, -123.1207), // Downtown
-                    LatLng(49.2415, -123.1120)  // Queen Elizabeth Park
-                )
-            ),
-            UserPin(
-                destination = listOf("SFU Burnaby", "Metrotown", "Downtown"),
-                userName = "user03",
-                location = listOf(
-                    LatLng(49.2781, -122.9199), // SFU
-                    LatLng(49.2250, -123.0010),  // Metrotown
-                    LatLng(49.2827, -123.1207), // Downtown
-                )
-            ),
-            UserPin(
-                destination = listOf("Vanier Park"),
-                userName = "user04",
-                location = listOf(
-                    LatLng(49.2696, -123.1400), // Vanier Park
-                )
-            ),
-            UserPin(
-                destination = listOf("Science World", "Olympic Village"),
-                userName = "user05",
-                location = listOf(
-                    LatLng(49.2734, -123.1030), // Science World
-                    LatLng(49.2710, -123.1260)  // Olympic Village
-                )
-            )
-        )
+    //gets the overview polyline from directions api
+    // Google Directions generates one overview polyline for the entire route, and provides a tool to decode it as well
+    //https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+    //Erik: used it a bit during web dev classes
+    fun fetchPolyline(origin: LatLng, route: Route, apiKey: String, mode: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val url = buildDirectionsUrl(origin, route, apiKey, mode)
+                val client = OkHttpClient()
+                val request = Request.Builder().url(url).build()
+                val response = client.newCall(request).execute()
+                if (!response.isSuccessful) throw IOException("HTTP error ${response.code}")
+                val body = response.body?.string() ?: throw IOException("Empty response")
+                val json = JSONObject(body)
+                val routes = json.getJSONArray("routes")
+                if (routes.length() == 0) throw IOException("No routes found")
+                val overviewPolyline = routes.getJSONObject(0)
+                    .getJSONObject("overview_polyline")
+                    .getString("points")
+                // Decode polyline points
+                val points = PolyUtil.decode(overviewPolyline)
+                _polylinePoints.postValue(points)
+
+            } catch (e: Exception) {
+                _errorMessage.postValue(e.message)
+            }
+        }
+    }
+
+    //build the request
+    private fun buildDirectionsUrl(
+        origin: LatLng,
+        route: Route,
+        apiKey: String,
+        mode: String
+    ): String {
+        val originStr = "${origin.latitude},${origin.longitude}"
+        var destinationStr = originStr
+        val waypointsList = mutableListOf<String>()
+
+        route.waypoints.forEachIndexed { index, point ->
+            val coord = "${point.latitude},${point.longitude}"
+            if (index == route.waypoints.size - 1) {
+                destinationStr = coord
+            } else {
+                waypointsList.add(coord)
+            }
+        }
+
+        val waypointsStr = if (waypointsList.isNotEmpty()) waypointsList.joinToString("|") else ""
+
+        val url = StringBuilder("https://maps.googleapis.com/maps/api/directions/json?")
+        url.append("origin=$originStr")
+        url.append("&destination=$destinationStr")
+        if (waypointsStr.isNotEmpty()) url.append("&waypoints=$waypointsStr")
+        url.append("&mode=$mode")
+        url.append("&key=$apiKey")
+
+        return url.toString()
+    }
+
+    fun getCurrentUserRouteById(routeId: String): LiveData<Route?> {
+        val result = MutableLiveData<Route?>()
+        viewModelScope.launch {
+            val route = repository.getCurrentUserFavoriteRouteById(routeId)
+            result.postValue(route)
+        }
+        return result
     }
 
 }

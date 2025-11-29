@@ -29,6 +29,9 @@ class RouteNodeAdapter(
 
     private var aiResponse: String? = null
     private var isLoadingAi: Boolean = false
+    
+    // Cache autocomplete adapters to prevent memory leaks and repeated creation
+    private val autocompleteAdapters = mutableMapOf<Int, PlacesAutoCompleteAdapter>()
 
     data class RouteNodeData(
         var no: Int = 1,
@@ -119,7 +122,10 @@ class RouteNodeAdapter(
         }
 
         // Setup Google Places Autocomplete for location field
-        val autocompleteAdapter = PlacesAutoCompleteAdapter(nodeHolder.itemView.context, placesClient)
+        // Reuse adapter if already created for this position
+        val autocompleteAdapter = autocompleteAdapters.getOrPut(position) {
+            PlacesAutoCompleteAdapter(nodeHolder.itemView.context, placesClient)
+        }
         nodeHolder.editLocation.setAdapter(autocompleteAdapter)
         nodeHolder.editLocation.threshold = 3
         
@@ -142,6 +148,12 @@ class RouteNodeAdapter(
         nodeHolder.editPlace.setText(item.place)
         nodeHolder.editDistance.setText(item.distance)
         nodeHolder.editAdditional.setText(item.additionalRequirements)
+        
+        // Update distance unit label based on settings
+        val prefs = context.getSharedPreferences("route_settings", Context.MODE_PRIVATE)
+        val unitIndex = prefs.getInt("unit_index", 0)
+        val unitLabel = if (unitIndex == 1) "mi" else "km"
+        nodeHolder.textKm.text = unitLabel
         
         if (item.hasTriedToSubmit) {
             RouteNodeValidationHelper.validateField(nodeHolder.editLocation, nodeHolder.errorLocation, "Location cannot be empty")
@@ -369,5 +381,30 @@ class RouteNodeAdapter(
     
     fun getRouteNodeData(): List<RouteNodeData> {
         return items.toList()
+    }
+    
+    fun setRouteNodeData(newData: List<RouteNodeData>) {
+        items.clear()
+        items.addAll(newData.mapIndexed { index, data -> 
+            data.copy(no = index + 1)
+        })
+        notifyDataSetChanged()
+    }
+    
+    fun cleanup() {
+        autocompleteAdapters.values.forEach { it.cleanup() }
+        autocompleteAdapters.clear()
+    }
+    
+    fun updateDistanceUnits() {
+        notifyItemRangeChanged(0, items.size)
+    }
+    
+    fun reset() {
+        items.clear()
+        items.add(RouteNodeData(no = 1))
+        aiResponse = null
+        notifyDataSetChanged()
+        notifyValidationChanged()
     }
 }

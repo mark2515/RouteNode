@@ -9,9 +9,31 @@
     <color name="white">#FFFFFFFF</color>
     <color name="green_active">#4CAF50</color>
     
-    <!-- Markdown rendering colors -->
+    <!-- App theme colors -->
     <color name="primaryColor">#6200EE</color>
+
+    <!-- light background -->
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+
+    <!-- Markdown rendering colors -->
     <color name="textColorSecondary">#757575</color>
     <color name="codeTextColor">#D84315</color>
     <color name="codeBackgroundColor">#F5F5F5</color>
+
+    <!-- Ask AI button (light theme) -->
+    <color name="ask_ai_button_bg">#424242</color>
+    <color name="ask_ai_button_text">#FFFFFF</color>
+
+    <!-- placeholders (light gray) -->
+    <color name="input_hint">#CCCCCC</color>
+
+    <!-- Input text color -->
+    <color name="input_text">#000000</color>
+
+    <!-- AI reply text color -->
+    <color name="ai_text">#212121</color>
+
+    <!-- Icon colors -->
+    <color name="icon_gray">#666666</color>
 </resources>

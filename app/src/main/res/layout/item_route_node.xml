@@ -52,10 +52,12 @@
                 android:minHeight="48dp"
                 android:background="@drawable/bg_input_rect"
                 android:inputType="text"
+                android:textColor="@color/input_text"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
                 android:completionThreshold="3"
-                android:hint="e.g., 750 Maple Ave" />
+                android:hint="e.g., 750 Maple Ave"
+                android:textColorHint="@color/input_hint" />
 
             <ImageButton
                 android:id="@+id/buttonMoreOptions"
@@ -102,9 +104,11 @@
                 android:minHeight="48dp"
                 android:background="@drawable/bg_input_rect"
                 android:inputType="text"
+                android:textColor="@color/input_text"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
-                android:hint="e.g., an Instagrammable café" />
+                android:hint="e.g., an Instagrammable café"
+                android:textColorHint="@color/input_hint" />
 
             <ImageButton
                 android:id="@+id/buttonMoreOptionsPlace"
@@ -151,9 +155,11 @@
                 android:minHeight="48dp"
                 android:background="@drawable/bg_input_rect"
                 android:inputType="numberDecimal"
+                android:textColor="@color/input_text"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp"
-                android:hint="e.g., 2" />
+                android:hint="e.g., 2"
+                android:textColorHint="@color/input_hint" />
 
             <TextView
                 android:id="@+id/textKm"
@@ -198,11 +204,13 @@
                 android:background="@drawable/bg_input_rect"
                 android:inputType="textMultiLine"
                 android:minLines="5"
+                android:textColor="@color/input_text"
                 android:paddingStart="8dp"
                 android:paddingEnd="48dp"
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
-                android:hint="e.g., under $20 per person" />
+                android:hint="e.g., under $20 per person"
+                android:textColorHint="@color/input_hint" />
 
             <ImageButton
                 android:id="@+id/buttonClearAdditional"
