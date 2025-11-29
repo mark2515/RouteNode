@@ -8,7 +8,8 @@
         android:id="@+id/topAppBar"
         android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
+        android:background="@color/black"
+        app:titleTextColor="@color/white"
         app:navigationIcon="@drawable/ic_arrow_back_24"
         app:title="AI Models"
         app:layout_constraintTop_toTopOf="parent"
@@ -194,6 +195,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
+            android:backgroundTint="@color/black"
             android:text="Save Changes" />
 
     </LinearLayout>

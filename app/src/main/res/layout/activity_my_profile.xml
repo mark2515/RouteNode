@@ -9,7 +9,8 @@
         android:id="@+id/topAppBar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
+        android:background="@color/black"
+        app:titleTextColor="@color/white"
         app:title="My Profile"
         app:navigationIcon="@drawable/ic_arrow_back_24" />
 
@@ -109,6 +110,7 @@
             <Button
                 android:id="@+id/btnEditProfile"
                 android:text="Edit Profile"
+                android:backgroundTint="@color/black"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp" />
@@ -116,6 +118,7 @@
             <Button
                 android:id="@+id/btnChangePassword"
                 android:text="Change Password"
+                android:backgroundTint="@color/black"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
         </LinearLayout>

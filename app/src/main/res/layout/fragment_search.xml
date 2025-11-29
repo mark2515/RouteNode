@@ -77,7 +77,7 @@
         android:textAllCaps="false"
         android:textColor="@color/ask_ai_button_text"
         app:cornerRadius="8dp"
-        app:backgroundTint="@color/ask_ai_button_bg"
+        app:backgroundTint="@color/black"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
