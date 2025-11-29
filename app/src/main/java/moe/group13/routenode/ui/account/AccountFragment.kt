@@ -42,7 +42,7 @@ class AccountFragment : Fragment() {
 
         nameTextView = view.findViewById(R.id.NameTV)
         emailTextView = view.findViewById(R.id.EmailTV)
-        profileImage = view.findViewById(R.id.profileImageView) // If you have one
+        profileImage = view.findViewById(R.id.profileImageView)
 
         loadAccountInfo()
 

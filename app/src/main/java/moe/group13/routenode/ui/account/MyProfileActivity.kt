@@ -34,7 +34,6 @@ class MyProfileActivity : AppCompatActivity() {
         setupButtons()
     }
 
-    // 🔥 This refreshes your profile every time you return from EditProfileActivity
     override fun onResume() {
         super.onResume()
         loadProfileData()
