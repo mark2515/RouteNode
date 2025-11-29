@@ -50,7 +50,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         favoritesRecycler.layoutManager = LinearLayoutManager(this)
 
 
-
         // MapViewModel setup
         val repository = RouteRepository()
         mapViewModel = ViewModelProvider(this, MapViewModelFactory(repository))
@@ -70,6 +69,28 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map_fragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        mapViewModel.polylinePoints.observe(this) { points ->
+            if (points.isNotEmpty()) {
+                currentPolyline?.remove()
+                currentPolyline = googleMap.addPolyline(
+                    PolylineOptions().addAll(points)
+                        .addAll(points)
+                        .color(Color.BLUE)
+                        .width(8f)
+                )
+            }
+        }
+        //idea: https://developer.android.com/guide/fragments/communicate
+        supportFragmentManager.setFragmentResultListener("editFinished", this) { _, _ ->
+            // Reload updated favorites from Firestore
+            mapViewModel.loadFavorites()
+
+            // Hide overlay
+            findViewById<FrameLayout>(R.id.overlay_fragment_container).visibility = View.GONE
+            favoritesRecycler.visibility = View.VISIBLE
+        }
+
     }
 
     override fun onMapReady(map: GoogleMap) {
@@ -123,17 +144,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             )
         }
         //draw the polyline
-        mapViewModel.polylinePoints.observe(this) { points ->
-            if (points.isNotEmpty()) {
-                currentPolyline?.remove()
-                currentPolyline = googleMap.addPolyline(
-                    PolylineOptions().addAll(points)
-                        .addAll(points)
-                        .color(Color.BLUE)
-                        .width(8f)
-                )
-            }
-        }
+
     }
 
     //idea: https://developer.android.com/guide/components/google-maps-intents
