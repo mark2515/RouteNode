@@ -3,6 +3,7 @@ package moe.group13.routenode.ui.account
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.text.Html
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -115,7 +116,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         btnHelp.setOnClickListener {
-            Toast.makeText(this, "Help & FAQ coming soon!", Toast.LENGTH_SHORT).show()
+            showHelpAndFaqDialog()
         }
 
         btnAbout.setOnClickListener {
@@ -148,5 +149,33 @@ class SettingsActivity : AppCompatActivity() {
         val index = prefs.getInt("theme_index", 0)
         updateTheme(index)
     }
-}
 
+    private fun showHelpAndFaqDialog() {
+        val faqContent = """
+            <b>Q: How is your app's place recommendation different from Google Maps?</b>
+            <br/><br/>
+            A: Google Maps shows places based on real-world data like user reviews, ratings, and popularity. Our AI, on the other hand, uses semantic reasoning from the information it was trained on, so it's better at understanding vague requests like "a library where I can plug in my laptop." It can also help plan routes in a more flexible, natural way.
+            <br/><br/><br/>
+            <b>Q: If your app uses a large language model, why can't I just ask ChatGPT directly?</b>
+            <br/><br/>
+            A: You can, but the process is pretty complicated. If you want to visit multiple places, you have to give ChatGPT the exact address for every stop, and you also need to phrase your request very clearly so it understands. Our app makes this much easier. With Google Maps Place Autocomplete, you only need to enter part of the address. You just fill out a simple form, so you don't need perfect wording, and the AI gives you a clean, structured answer. You can also save your favorite routes and jump straight into Google Maps navigation with one tap.
+        """.trimIndent()
+
+        val scrollView = ScrollView(this)
+        val textView = TextView(this)
+        textView.text = Html.fromHtml(faqContent, Html.FROM_HTML_MODE_LEGACY)
+        textView.textSize = 16f
+        textView.setPadding(60, 40, 60, 40)
+        textView.setTextIsSelectable(true)
+        
+        scrollView.addView(textView)
+        
+        AlertDialog.Builder(this)
+            .setTitle("Help & FAQ")
+            .setView(scrollView)
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+}
