@@ -1,12 +1,10 @@
 package moe.group13.routenode.ui.account
 
 import android.os.Bundle
-import android.widget.AutoCompleteTextView
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
@@ -21,10 +19,13 @@ class CommonLocationsActivity : AppCompatActivity() {
     private lateinit var buttonSaveLocation: Button
     private lateinit var tvNoLocations: TextView
     private lateinit var recyclerLocations: RecyclerView
-    
+
     private lateinit var placesClient: PlacesClient
     private lateinit var placesAdapter: PlacesAutoCompleteAdapter
-    
+
+    private lateinit var viewModel: SettingsViewModel
+    private lateinit var locationAdapter: SavedLocationAdapter
+
     private var selectedPlace: Place? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,6 +36,7 @@ class CommonLocationsActivity : AppCompatActivity() {
         initializePlaces()
         initViews()
         setupAddressSearch()
+        setupViewModel()
         setupSaveButton()
     }
 
@@ -46,7 +48,6 @@ class CommonLocationsActivity : AppCompatActivity() {
     }
 
     private fun initializePlaces() {
-        // Initialize Places SDK if not already initialized
         if (!Places.isInitialized()) {
             Places.initialize(applicationContext, getString(R.string.google_maps_key))
         }
@@ -60,23 +61,37 @@ class CommonLocationsActivity : AppCompatActivity() {
         recyclerLocations = findViewById(R.id.recyclerLocations)
     }
 
+    private fun setupViewModel() {
+        viewModel = SettingsViewModel()
+        locationAdapter = SavedLocationAdapter()
+
+        recyclerLocations.adapter = locationAdapter
+        recyclerLocations.layoutManager = LinearLayoutManager(this)   // REQUIRED
+
+        // Load Firestore data
+        viewModel.loadLocations()
+
+        viewModel.savedLocations.observe(this) { list ->
+            locationAdapter.submitList(list)
+            tvNoLocations.visibility = if (list.isEmpty()) TextView.VISIBLE else TextView.GONE
+        }
+    }
+
     private fun setupAddressSearch() {
-        // Create Places autocomplete adapter
         placesAdapter = PlacesAutoCompleteAdapter(this, placesClient)
         editAddress.setAdapter(placesAdapter)
         editAddress.threshold = 3
 
-        // Handle place selection from autocomplete
         editAddress.setOnItemClickListener { parent, _, position, _ ->
-            val selectedItem = parent.getItemAtPosition(position) as PlacesAutoCompleteAdapter.PlaceAutocomplete
-            
-            // Fetch full place details
+            val selectedItem =
+                parent.getItemAtPosition(position) as PlacesAutoCompleteAdapter.PlaceAutocomplete
+
             placesAdapter.getPlaceDetails(selectedItem.placeId) { place ->
                 if (place != null) {
                     selectedPlace = place
                     editAddress.setText(place.address ?: selectedItem.toString())
                     editAddress.dismissDropDown()
-                    
+
                     Toast.makeText(
                         this,
                         "Selected: ${place.name}",
@@ -105,14 +120,7 @@ class CommonLocationsActivity : AppCompatActivity() {
                     Toast.makeText(this, "Please select an address from suggestions", Toast.LENGTH_SHORT).show()
                 }
                 else -> {
-                    // Save location logic will be implemented here
-                    Toast.makeText(
-                        this,
-                        "Location saved successfully!",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    
-                    // Clear fields
+                    showNameDialog(address)
                     editAddress.text.clear()
                     selectedPlace = null
                 }
@@ -120,9 +128,27 @@ class CommonLocationsActivity : AppCompatActivity() {
         }
     }
 
+    private fun showNameDialog(address: String) {
+        val editText = EditText(this)
+        editText.hint = "Enter a name"
+
+        AlertDialog.Builder(this)
+            .setTitle("Name This Location")
+            .setView(editText)
+            .setPositiveButton("Save") { _, _ ->
+                val name = editText.text.toString().trim()
+                if (name.isNotBlank()) {
+                    viewModel.saveLocation(address, name)
+                } else {
+                    Toast.makeText(this, "Name cannot be empty.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        // Clean up adapter resources
         if (::placesAdapter.isInitialized) {
             placesAdapter.cleanup()
         }

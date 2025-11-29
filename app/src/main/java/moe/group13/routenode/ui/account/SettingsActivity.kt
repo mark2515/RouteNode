@@ -33,7 +33,6 @@ class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Apply saved theme BEFORE setContentView
         applySavedTheme()
 
         setContentView(R.layout.activity_settings)
@@ -137,9 +136,6 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    // ------------------------------------------------
-    // Theme Logic
-    // ------------------------------------------------
     private fun updateTheme(index: Int) {
         when (index) {
             0 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
