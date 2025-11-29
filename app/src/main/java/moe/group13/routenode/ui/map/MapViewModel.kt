@@ -42,11 +42,14 @@ class MapViewModel(private val repository: RouteRepository) : ViewModel() {
         }
     }
 
-  //gets the overview polyline from directions api
+    //gets the overview polyline from directions api
+    // Google Directions generates one overview polyline for the entire route, and provides a tool to decode it as well
+    //https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+    //Erik: used it a bit during web dev classes
     fun fetchPolyline(origin: LatLng, route: Route, apiKey: String, mode: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val url = buildDirectionsUrl(origin, route, apiKey,mode)
+                val url = buildDirectionsUrl(origin, route, apiKey, mode)
                 val client = OkHttpClient()
                 val request = Request.Builder().url(url).build()
                 val response = client.newCall(request).execute()
@@ -67,8 +70,14 @@ class MapViewModel(private val repository: RouteRepository) : ViewModel() {
             }
         }
     }
+
     //build the request
-    private fun buildDirectionsUrl(origin: LatLng, route: Route, apiKey: String, mode: String): String {
+    private fun buildDirectionsUrl(
+        origin: LatLng,
+        route: Route,
+        apiKey: String,
+        mode: String
+    ): String {
         val originStr = "${origin.latitude},${origin.longitude}"
         var destinationStr = originStr
         val waypointsList = mutableListOf<String>()
@@ -93,4 +102,14 @@ class MapViewModel(private val repository: RouteRepository) : ViewModel() {
 
         return url.toString()
     }
+
+    fun getCurrentUserRouteById(routeId: String): LiveData<Route?> {
+        val result = MutableLiveData<Route?>()
+        viewModelScope.launch {
+            val route = repository.getCurrentUserFavoriteRouteById(routeId)
+            result.postValue(route)
+        }
+        return result
+    }
+
 }

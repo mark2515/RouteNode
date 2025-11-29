@@ -1,26 +1,29 @@
 package moe.group13.routenode.ui.map
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.FrameLayout
 import android.widget.Spinner
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import androidx.appcompat.app.AlertDialog
-import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import moe.group13.routenode.BuildConfig
@@ -32,11 +35,10 @@ import moe.group13.routenode.data.repository.RouteRepository
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var googleMap: GoogleMap
     private lateinit var mapViewModel: MapViewModel
-    private lateinit var favoritesRecycler: RecyclerView
+    lateinit var favoritesRecycler: RecyclerView
     private lateinit var modeSpinner: Spinner
     private var selectedMode: String = "driving"
     private var currentPolyline: Polyline? = null
-
 
 
     companion object {
@@ -82,8 +84,9 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         mapViewModel.favorites.observe(this) { favList ->
             favoritesRecycler.adapter = FavoritesAdapter(
                 favorites = favList,
-                onItemClick = ::onRowClick,
-                onButtonClick = ::openGoogleMaps
+                onGoClick = ::openGoogleMaps,
+                onPreviewClick = ::onRowClick,
+                onEditClick = ::onEditClick
             )
         }
 
@@ -134,9 +137,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             val latLng = LatLng(first.latitude, first.longitude)
             googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
         }
-        //get our location and generate polyline
+        //get our location and generate polyline for preview
         getCurrentLocation { userLocation ->
-            mapViewModel.fetchPolyline(userLocation, route, BuildConfig.GOOGLE_MAPS_API_KEY,selectedMode)
+            mapViewModel.fetchPolyline(
+                userLocation,
+                route,
+                BuildConfig.GOOGLE_MAPS_API_KEY,
+                selectedMode
+            )
         }
         //draw the polyline
         mapViewModel.polylinePoints.observe(this) { points ->
@@ -152,45 +160,54 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    //idea: https://developer.android.com/guide/components/google-maps-intents
+    //built upon: https://developer.android.com/training/cars/platforms/automotive-os/android-intents-automotive
     private fun openGoogleMaps(route: Route) {
-        if (!::googleMap.isInitialized) return
-        // Draw pins on the map
-        route.waypoints.firstOrNull()?.let { first ->
-            googleMap.animateCamera(
-                CameraUpdateFactory.newLatLngZoom(LatLng(first.latitude, first.longitude), 15f)
-            )
-        }
-    }
-
-    //for generatine the overviewpolyling
-    // Google encodes and ccreates their own route polyline, so we just use it to draw by decoding it
-    private fun getDirectionsUrl(userLocation: LatLng, route: Route): String {
-        val origin = "${userLocation.latitude},${userLocation.longitude}"
-        var destination = origin
-        val waypointsList = mutableListOf<String>()
-
-        // Loop through waypoints to separate destination from intermediate points
-        route.waypoints.forEachIndexed { index, point ->
-            val coord = "${point.latitude},${point.longitude}"
-            if (index == route.waypoints.size - 1) {
-                destination = coord // last waypoint
-            } else {
-                waypointsList.add(coord) // intermediate waypoints
+        if (route.waypoints.isEmpty()) return
+        // Build the directions URL with waypoints and users location
+        getCurrentLocation { userLocation ->
+            val baseUrl = StringBuilder("https://www.google.com/maps/dir/")
+            baseUrl.append("${userLocation.latitude},${userLocation.longitude}/")
+            route.waypoints.forEach { waypoint ->
+                baseUrl.append("${waypoint.latitude},${waypoint.longitude}/")
             }
-        }
-        // build the waypoints section
-        val waypoints = if (waypointsList.isNotEmpty()) waypointsList.joinToString("|") else ""
-        // Begin building the api request
-        val url = StringBuilder("https://maps.googleapis.com/maps/api/directions/json?")
-        url.append("origin=$origin")
-        url.append("&destination=$destination")
-        if (waypoints.isNotEmpty()) {
-            url.append("&waypoints=$waypoints")
-        }
-        url.append("&key=${BuildConfig.GOOGLE_MAPS_API_KEY}")
+            val gmmIntentUri = Uri.parse(baseUrl.toString())
+            val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
 
-        return url.toString()
+            //open google maps: https://developer.android.com/guide/components/intents-common#ViewMap
+            mapIntent.setPackage("com.google.android.apps.maps")
+            //check if maps is installed: //check if googlemaps installed: idea: https://stackoverflow.com/questions/65564947/how-to-create-maps-intent-in-such-a-way-that-if-maps-app-is-not-installed-on-use
+            if (mapIntent.resolveActivity(packageManager) != null) {
+                startActivity(mapIntent)
+            } else {
+                Toast.makeText(
+                    this,
+                    "Google Maps is not installed. Opening in browser...",
+                    Toast.LENGTH_LONG
+                ).show()
+                //fallback: idea: https://stackoverflow.com/questions/5248870/starting-an-action-view-activity-to-open-the-browser-how-do-i-return-to-my-app
+                val browserIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+                startActivity(browserIntent)
+            }
+            startActivity(mapIntent)
+        }
+
     }
+
+
+    //open edit fragment
+    //passing data idea: https://stackoverflow.com/questions/42266436/passing-objects-between-fragments
+    private fun onEditClick(route: Route) {
+        favoritesRecycler.visibility = View.GONE
+        val editFragment = MapEditFragment.newInstance(route.id)
+
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.overlay_fragment_container, editFragment)
+            .addToBackStack(null)
+            .commit()
+        findViewById<FrameLayout>(R.id.overlay_fragment_container).visibility = View.VISIBLE
+    }
+
 
     //get current location so we can start doing directions and polylines
     private fun getCurrentLocation(onLocationReady: (LatLng) -> Unit) {
