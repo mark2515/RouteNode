@@ -157,7 +157,7 @@
 
             <Button
                 android:id="@+id/btnClearHistory"
-                android:text="Clear Search &amp; Route History"
+                android:text="Clear Favorite Route History"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp" />

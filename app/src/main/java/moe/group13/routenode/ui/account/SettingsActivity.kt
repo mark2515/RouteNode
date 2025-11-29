@@ -8,8 +8,11 @@ import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.MaterialToolbar
+import kotlinx.coroutines.launch
 import moe.group13.routenode.R
+import moe.group13.routenode.data.repository.RouteRepository
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -25,6 +28,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var btnAbout: Button
 
     private val PREFS = "route_settings"
+    private val routeRepository = RouteRepository()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,9 +105,9 @@ class SettingsActivity : AppCompatActivity() {
         btnClearHistory.setOnClickListener {
             AlertDialog.Builder(this)
                 .setTitle("Clear History")
-                .setMessage("Are you sure you want to clear search & route history?")
+                .setMessage("Are you sure you want to clear all favorite routes? This action cannot be undone.")
                 .setPositiveButton("Yes") { _, _ ->
-                    Toast.makeText(this, "History cleared", Toast.LENGTH_SHORT).show()
+                    clearAllFavoriteRoutes()
                 }
                 .setNegativeButton("Cancel", null)
                 .show()
@@ -148,6 +152,33 @@ class SettingsActivity : AppCompatActivity() {
         val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val index = prefs.getInt("theme_index", 0)
         updateTheme(index)
+    }
+
+    private fun clearAllFavoriteRoutes() {
+        lifecycleScope.launch {
+            try {
+                val success = routeRepository.clearAllFavorites()
+                if (success) {
+                    Toast.makeText(
+                        this@SettingsActivity,
+                        "All favorite routes have been cleared",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Toast.makeText(
+                        this@SettingsActivity,
+                        "Failed to clear favorites. Please try again.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@SettingsActivity,
+                    "Error: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
 
     private fun showHelpAndFaqDialog() {
