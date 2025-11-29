@@ -133,4 +133,11 @@ class MapEditFragment : Fragment() {
 
         }
     }
+    //when the back button is pressed, hide the fragment
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Show the favorites list again
+        (activity as? MapActivity)?.findViewById<RecyclerView>(R.id.favorites_recycler)?.visibility = View.VISIBLE
+    }
+
 }
