@@ -7,10 +7,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
 import android.widget.FrameLayout
-import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -36,7 +33,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var googleMap: GoogleMap
     private lateinit var mapViewModel: MapViewModel
     lateinit var favoritesRecycler: RecyclerView
-    private lateinit var modeSpinner: Spinner
     private var selectedMode: String = "driving"
     private var currentPolyline: Polyline? = null
 
@@ -53,28 +49,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         favoritesRecycler = findViewById(R.id.favorites_recycler)
         favoritesRecycler.layoutManager = LinearLayoutManager(this)
 
-        //spinner setup
-        modeSpinner = findViewById(R.id.mode_spinner)
-        val modes = listOf("Driving", "Walking", "Bicycling")
-        val modeValues = listOf("driving", "walking", "bicycling")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, modes)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        modeSpinner.adapter = adapter
 
-        modeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long
-            ) {
-                selectedMode = modeValues[position]
-            }
 
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                // Handle case where nothing is selected
-            }
-        }
         // MapViewModel setup
         val repository = RouteRepository()
         mapViewModel = ViewModelProvider(this, MapViewModelFactory(repository))
