@@ -106,6 +106,7 @@ class MapEditFragment : Fragment() {
             override fun onPlaceSelected(place: Place) {
                 selectedPlace = place
             }
+
             override fun onError(status: Status) {
             }
         })
@@ -125,19 +126,27 @@ class MapEditFragment : Fragment() {
             )
             //swap
             routeRepository.swap(routeId!!, selectedTag, selectedPlaceName, selectedLatLng)
+            //tell activity that fragment swap is done
+            parentFragmentManager.setFragmentResult("editFinished", Bundle())
             //hide fragment
-            activity?.findViewById<FrameLayout>(R.id.overlay_fragment_container)?.visibility = View.GONE
+            activity?.findViewById<FrameLayout>(R.id.overlay_fragment_container)?.visibility =
+                View.GONE
             //bring back the favorite list to be visible again
             (activity as? MapActivity)?.favoritesRecycler?.visibility = View.VISIBLE
             parentFragmentManager.popBackStack()
 
         }
     }
+
     //when the back button is pressed, hide the fragment
     override fun onDestroyView() {
         super.onDestroyView()
+        //hide the edit fragment
+        activity?.findViewById<FrameLayout>(R.id.overlay_fragment_container)?.visibility = View.GONE
+
         // Show the favorites list again
-        (activity as? MapActivity)?.findViewById<RecyclerView>(R.id.favorites_recycler)?.visibility = View.VISIBLE
+        (activity as? MapActivity)?.findViewById<RecyclerView>(R.id.favorites_recycler)?.visibility =
+            View.VISIBLE
     }
 
 }
