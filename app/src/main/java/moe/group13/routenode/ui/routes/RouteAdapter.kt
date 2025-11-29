@@ -92,9 +92,6 @@ class RouteAdapter(
         notifyDataSetChanged()
     }
     
-    /**
-     * Truncates text to a maximum number of sentences and adds "...more" if truncated
-     */
     private fun truncateToSentences(text: String, maxSentences: Int = 3): String {
         if (text.isBlank()) {
             return text
