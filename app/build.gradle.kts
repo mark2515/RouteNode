@@ -47,6 +47,12 @@ android {
             "GOOGLE_MAPS_API_KEY",
             "\"${properties.getProperty("GOOGLE_MAPS_API_KEY")}\""
         )
+        buildConfigField(
+            "String",
+            "OPENWEATHER_API_KEY",
+            "\"${properties.getProperty("OPENWEATHER_API_KEY", "")}\""
+        )
+
     }
 
     buildTypes {
@@ -70,6 +76,13 @@ android {
         buildConfig = true
         viewBinding = true
     }
+    // Force BuildConfig to be generated
+    applicationVariants.all {
+        generateBuildConfigProvider.configure {
+            enabled = true
+        }
+    }
+
 }
 
 dependencies {

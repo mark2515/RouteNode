@@ -12,12 +12,14 @@ import moe.group13.routenode.ui.FavoritesFragment
 import moe.group13.routenode.ui.search.SearchFragment
 import moe.group13.routenode.ui.manual.ManualSearchFragment
 import com.google.firebase.firestore.FirebaseFirestore
+import moe.group13.routenode.ui.account.ThemeManager
 import moe.group13.routenode.ui.map.MapActivity
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        ThemeManager.applySavedTheme(this)
 
         val viewPager = findViewById<ViewPager2>(R.id.view_pager)
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
