@@ -298,11 +298,25 @@ class RouteNodeAdapter(
         }
 
         nodeHolder.buttonMoreOptions.setOnClickListener {
-            RouteNodeDialogs.showMoreOptionsLocation(nodeHolder.itemView.context)
+            RouteNodeDialogs.showMoreOptionsLocation(nodeHolder.itemView.context) { selectedAddress ->
+                val adapterPosition = nodeHolder.bindingAdapterPosition
+                if (adapterPosition != RecyclerView.NO_POSITION && adapterPosition < items.size) {
+                    // Update backing data
+                    items[adapterPosition].location = selectedAddress
+                    nodeHolder.editLocation.setText(selectedAddress)
+                }
+            }
         }
 
         nodeHolder.buttonMoreOptionsPlace.setOnClickListener {
-            RouteNodeDialogs.showMoreOptionsPlace(nodeHolder.itemView.context)
+            RouteNodeDialogs.showMoreOptionsPlace(nodeHolder.itemView.context) { selectedPlace ->
+                val adapterPosition = nodeHolder.bindingAdapterPosition
+                if (adapterPosition != RecyclerView.NO_POSITION && adapterPosition < items.size) {
+                    // Update backing data
+                    items[adapterPosition].place = selectedPlace
+                    nodeHolder.editPlace.setText(selectedPlace)
+                }
+            }
         }
     }
 
