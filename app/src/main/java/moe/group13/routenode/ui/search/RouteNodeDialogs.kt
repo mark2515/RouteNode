@@ -71,6 +71,8 @@ object RouteNodeDialogs {
                     dialogView.findViewById<LinearLayout>(R.id.containerLocations)
 
                 var dialog: AlertDialog? = null
+                var selectedAddress: String? = null
+                var selectedView: View? = null
 
                 if (locations.isEmpty()) {
                     val emptyView = TextView(context).apply {
@@ -97,8 +99,11 @@ object RouteNodeDialogs {
                         addressText.text = locationItem.address
 
                         itemView.setOnClickListener {
-                            onLocationSelected(locationItem.address)
-                            dialog?.dismiss()
+                            // Update selected state
+                            selectedView?.setBackgroundResource(R.drawable.bg_input_rect)
+                            itemView.setBackgroundResource(R.drawable.bg_input_rect_selected)
+                            selectedView = itemView
+                            selectedAddress = locationItem.address
                         }
 
                         container.addView(itemView)
@@ -107,6 +112,19 @@ object RouteNodeDialogs {
 
                 builder.setView(dialogView)
                     .setNegativeButton("Cancel") { d, _ ->
+                        d.dismiss()
+                    }
+                    .setPositiveButton("OK") { d, _ ->
+                        val address = selectedAddress
+                        if (address != null) {
+                            onLocationSelected(address)
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Please select a location first.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                         d.dismiss()
                     }
 
@@ -162,6 +180,8 @@ object RouteNodeDialogs {
                     dialogView.findViewById<LinearLayout>(R.id.containerLocations)
 
                 var dialog: AlertDialog? = null
+                var selectedPlaceName: String? = null
+                var selectedView: View? = null
 
                 if (places.isEmpty()) {
                     val emptyView = TextView(context).apply {
@@ -188,8 +208,10 @@ object RouteNodeDialogs {
                         addressText.text = ""
 
                         itemView.setOnClickListener {
-                            onPlaceSelected(placeItem.name)
-                            dialog?.dismiss()
+                            selectedView?.setBackgroundResource(R.drawable.bg_input_rect)
+                            itemView.setBackgroundResource(R.drawable.bg_input_rect_selected)
+                            selectedView = itemView
+                            selectedPlaceName = placeItem.name
                         }
 
                         container.addView(itemView)
@@ -198,6 +220,19 @@ object RouteNodeDialogs {
 
                 builder.setView(dialogView)
                     .setNegativeButton("Cancel") { d, _ ->
+                        d.dismiss()
+                    }
+                    .setPositiveButton("OK") { d, _ ->
+                        val placeName = selectedPlaceName
+                        if (placeName != null) {
+                            onPlaceSelected(placeName)
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Please select a place first.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                         d.dismiss()
                     }
 
