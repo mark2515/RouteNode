@@ -5,12 +5,14 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import moe.group13.routenode.R
 
 class SavedLocationAdapter(
-    private val onItemClick: ((LocationItem) -> Unit)? = null
+    private val onItemClick: ((LocationItem) -> Unit)? = null,
+    private val onDeleteClick: ((LocationItem) -> Unit)? = null
 ) : RecyclerView.Adapter<SavedLocationAdapter.LocationHolder>() {
 
     private var list: List<LocationItem> = emptyList()
@@ -27,6 +29,7 @@ class SavedLocationAdapter(
         fun bind(item: LocationItem) {
             val nameTextView = itemView.findViewById<TextView>(R.id.txtLocationName)
             val addressTextView = itemView.findViewById<TextView>(R.id.txtLocationAddress)
+            val deleteButton = itemView.findViewById<ImageButton>(R.id.btnDeleteLocation)
             
             nameTextView.text = item.name
             addressTextView.text = item.address
@@ -40,6 +43,11 @@ class SavedLocationAdapter(
             } else {
                 nameTextView.setTextColor(Color.parseColor("#000000"))
                 addressTextView.setTextColor(Color.parseColor("#555555"))
+            }
+
+            // Handle delete button click
+            deleteButton.setOnClickListener {
+                onDeleteClick?.invoke(item)
             }
 
             // Optional: handle click (open map)

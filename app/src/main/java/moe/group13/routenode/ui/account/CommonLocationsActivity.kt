@@ -65,7 +65,11 @@ class CommonLocationsActivity : AppCompatActivity() {
 
     private fun setupViewModel() {
         viewModel = SettingsViewModel()
-        locationAdapter = SavedLocationAdapter()
+        locationAdapter = SavedLocationAdapter(
+            onDeleteClick = { item ->
+                showDeleteConfirmationDialog(item)
+            }
+        )
 
         recyclerLocations.adapter = locationAdapter
         recyclerLocations.layoutManager = LinearLayoutManager(this)
@@ -134,6 +138,18 @@ class CommonLocationsActivity : AppCompatActivity() {
                 } else {
                     Toast.makeText(this, "Name cannot be empty.", Toast.LENGTH_SHORT).show()
                 }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showDeleteConfirmationDialog(item: LocationItem) {
+        AlertDialog.Builder(this)
+            .setTitle("Delete Location")
+            .setMessage("Are you sure you want to delete \"${item.name}\"?")
+            .setPositiveButton("Delete") { _, _ ->
+                viewModel.deleteLocation(item.name, item.address)
+                Toast.makeText(this, "Deleted: ${item.name}", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancel", null)
             .show()

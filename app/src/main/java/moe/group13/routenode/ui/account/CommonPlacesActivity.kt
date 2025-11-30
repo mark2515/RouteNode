@@ -2,6 +2,7 @@ package moe.group13.routenode.ui.account
 
 import android.os.Bundle
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -46,7 +47,11 @@ class CommonPlacesActivity : AppCompatActivity() {
 
     private fun setupViewModel() {
         viewModel = SettingsViewModel()
-        placeAdapter = SavedLocationAdapter()
+        placeAdapter = SavedLocationAdapter(
+            onDeleteClick = { item ->
+                showDeleteConfirmationDialog(item)
+            }
+        )
 
         recyclerPlaces.adapter = placeAdapter
         recyclerPlaces.layoutManager = LinearLayoutManager(this)
@@ -73,6 +78,18 @@ class CommonPlacesActivity : AppCompatActivity() {
 
             Toast.makeText(this, "Place saved!", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun showDeleteConfirmationDialog(item: LocationItem) {
+        AlertDialog.Builder(this)
+            .setTitle("Delete Place")
+            .setMessage("Are you sure you want to delete \"${item.name}\"?")
+            .setPositiveButton("Delete") { _, _ ->
+                viewModel.deletePlace(item.name)
+                Toast.makeText(this, "Deleted: ${item.name}", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun setupSwipeToDelete() {
