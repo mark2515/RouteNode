@@ -11,6 +11,8 @@ import android.text.style.UnderlineSpan
 import android.text.style.ClickableSpan
 import android.text.method.LinkMovementMethod
 import android.graphics.Typeface
+import android.graphics.Color
+import android.content.res.Configuration
 import android.view.View
 import com.google.firebase.auth.FirebaseAuth
 import moe.group13.routenode.MainActivity
@@ -28,6 +30,13 @@ class SignUpActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         firebaseAuth = FirebaseAuth.getInstance()
+
+        val isDarkTheme = (resources.configuration.uiMode and 
+            Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        val textColor = if (isDarkTheme) Color.WHITE else Color.BLACK
+
+        binding.appTitle.setTextColor(textColor)
+        binding.SignInTV.setTextColor(textColor)
 
         val signInText = "Already Registered, Sign In!"
         val spannableSignIn = SpannableString(signInText)
