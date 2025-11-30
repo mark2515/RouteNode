@@ -10,6 +10,22 @@ import java.util.Calendar
 
 object ThemeManager {
 
+    private const val PREFS = "route_settings"
+    fun applySavedTheme(context: Context) {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val index = prefs.getInt("theme_index", 0)
+        applyTheme(context, index)
+    }
+
+    fun applyTheme(context: Context, index: Int) {
+        when (index) {
+            0 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+            1 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            2 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            3 -> applyAutoTheme(context)     // Auto (Time-based)
+        }
+    }
+
     fun applyAutoTheme(context: Context) {
         val fine = Manifest.permission.ACCESS_FINE_LOCATION
         val coarse = Manifest.permission.ACCESS_COARSE_LOCATION
