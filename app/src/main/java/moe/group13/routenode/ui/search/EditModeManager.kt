@@ -1,7 +1,9 @@
 package moe.group13.routenode.ui.search
 
 import android.content.Context
+import android.location.Geocoder
 import android.text.InputType
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
@@ -10,10 +12,12 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.GeoPoint
 import com.google.gson.Gson
 import moe.group13.routenode.R
 import moe.group13.routenode.data.model.Route
 import moe.group13.routenode.ui.routes.RouteViewModel
+import java.util.Locale
 
 class EditModeManager(
     private val fragment: Fragment,
@@ -52,7 +56,8 @@ class EditModeManager(
     }
 
     fun checkForEditRoute() {
-        val prefs = fragment.requireContext().getSharedPreferences("route_edit", Context.MODE_PRIVATE)
+        val prefs =
+            fragment.requireContext().getSharedPreferences("route_edit", Context.MODE_PRIVATE)
         val routeNodeDataJson = prefs.getString("edit_route_node_data", null)
         val routeId = prefs.getString("edit_route_id", null)
         val routeTitle = prefs.getString("edit_route_title", null)
@@ -95,7 +100,8 @@ class EditModeManager(
         isWaitingForAiToSave = false
 
         // Show edit mode banner
-        fragment.view?.findViewById<MaterialCardView>(R.id.editModeBanner)?.visibility = View.VISIBLE
+        fragment.view?.findViewById<MaterialCardView>(R.id.editModeBanner)?.visibility =
+            View.VISIBLE
         updateEditModeText(routeTitle)
 
         // Reset Done button to default state
@@ -107,7 +113,8 @@ class EditModeManager(
 
         // Load original AI response if available
         if (!originalDescription.isNullOrBlank()) {
-            val isAiResponse = !originalDescription.contains("Node") || originalDescription.length > 100
+            val isAiResponse =
+                !originalDescription.contains("Node") || originalDescription.length > 100
             if (isAiResponse) {
                 viewModel.aiResponse.value = originalDescription
                 routeNodeAdapter.setAiResponse(originalDescription)
@@ -134,7 +141,8 @@ class EditModeManager(
     }
 
     private fun updateEditModeText(title: String) {
-        fragment.view?.findViewById<android.widget.TextView>(R.id.editModeText)?.text = "Editing: $title"
+        fragment.view?.findViewById<android.widget.TextView>(R.id.editModeText)?.text =
+            "Editing: $title"
     }
 
     private fun showRenameFavoriteDialog() {
@@ -159,7 +167,11 @@ class EditModeManager(
             saveButton.setOnClickListener {
                 val newName = input.text.toString().trim()
                 if (newName.isBlank()) {
-                    Toast.makeText(fragment.requireContext(), "Please enter a name", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        fragment.requireContext(),
+                        "Please enter a name",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     return@setOnClickListener
                 }
                 editingRouteTitle = newName
@@ -197,12 +209,17 @@ class EditModeManager(
         val routeNodeData = routeNodeAdapter.getRouteNodeData()
 
         if (routeNodeData.isEmpty()) {
-            Toast.makeText(fragment.requireContext(), "No route data to save", Toast.LENGTH_SHORT).show()
+            Toast.makeText(fragment.requireContext(), "No route data to save", Toast.LENGTH_SHORT)
+                .show()
             return
         }
 
         if (editingRouteId == null) {
-            Toast.makeText(fragment.requireContext(), "Error: Route ID not found", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                fragment.requireContext(),
+                "Error: Route ID not found",
+                Toast.LENGTH_SHORT
+            ).show()
             return
         }
 
@@ -226,7 +243,10 @@ class EditModeManager(
 
         if (!hasRouteChanged && originalRouteNodeDataJson != null) {
             // No changes to route data, save directly without generating new AI
-            android.util.Log.d("EditModeManager", "No changes detected, saving without AI generation")
+            android.util.Log.d(
+                "EditModeManager",
+                "No changes detected, saving without AI generation"
+            )
             performSaveAfterAi()
         } else {
             // Route data has changed, generate new AI advice
@@ -234,7 +254,8 @@ class EditModeManager(
 
             // Disable Done button and show loading state
             fragment.view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.isEnabled = false
-            fragment.view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.text = "Generating AI advice..."
+            fragment.view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.text =
+                "Generating AI advice..."
 
             // Trigger AI advice generation via callback
             onTriggerAiGeneration()
@@ -246,13 +267,18 @@ class EditModeManager(
         val aiResponse = viewModel.aiResponse.value
 
         if (routeNodeData.isEmpty()) {
-            Toast.makeText(fragment.requireContext(), "No route data to save", Toast.LENGTH_SHORT).show()
+            Toast.makeText(fragment.requireContext(), "No route data to save", Toast.LENGTH_SHORT)
+                .show()
             resetSaveState()
             return
         }
 
         if (editingRouteId == null) {
-            Toast.makeText(fragment.requireContext(), "Error: Route ID not found", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                fragment.requireContext(),
+                "Error: Route ID not found",
+                Toast.LENGTH_SHORT
+            ).show()
             resetSaveState()
             return
         }
@@ -267,7 +293,11 @@ class EditModeManager(
         favoriteName: String
     ) {
         if (editingRouteId == null) {
-            Toast.makeText(fragment.requireContext(), "Error: Route ID not found", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                fragment.requireContext(),
+                "Error: Route ID not found",
+                Toast.LENGTH_SHORT
+            ).show()
             resetSaveState()
             return
         }
@@ -284,12 +314,24 @@ class EditModeManager(
             }
         }
 
+        val regex = Regex("```(.*?)```", RegexOption.DOT_MATCHES_ALL)
+        val waypoints = regex.findAll(aiResponse ?: "")
+            .map { match: MatchResult -> match.groups[1]?.value?.trim() ?: "" }
+            .toList()
+
+        // Convert addresses to geocode
+        val geoPoints = convertAddressesToGeoPoints(fragment.requireContext(), waypoints)
+
         // Get current user ID
         val currentUser = FirebaseAuth.getInstance().currentUser
         val creatorId = currentUser?.uid ?: ""
 
         if (creatorId.isEmpty()) {
-            Toast.makeText(fragment.requireContext(), "Please log in to save favorites", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                fragment.requireContext(),
+                "Please log in to save favorites",
+                Toast.LENGTH_SHORT
+            ).show()
             resetSaveState()
             return
         }
@@ -303,11 +345,11 @@ class EditModeManager(
             id = editingRouteId!!,
             title = favoriteName,
             description = routeDescription,
-            waypoints = emptyList(),
+            waypoints = geoPoints,
             distanceKm = totalDistance,
             creatorId = creatorId,
             isPublic = false,
-            tags = emptyList(),
+            tags = waypoints,
             estimatedDurationMinutes = (totalDistance * 12).toInt(),
             difficulty = "easy",
             rating = 0.0,
@@ -322,7 +364,11 @@ class EditModeManager(
         // Update the favorite
         routeViewModel.saveFavorite(updatedRoute, favoriteName)
 
-        Toast.makeText(fragment.requireContext(), "Favorite updated successfully!", Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+            fragment.requireContext(),
+            "Favorite updated successfully!",
+            Toast.LENGTH_SHORT
+        ).show()
 
         // Reset flag and exit edit mode
         isWaitingForAiToSave = false
@@ -337,5 +383,28 @@ class EditModeManager(
 
     fun needsAiGeneration(): Boolean {
         return isWaitingForAiToSave
+    }
+    //use google geocoder to convert addresses to geopoints, for google maps pins
+    private fun convertAddressesToGeoPoints(
+        context: Context,
+        addresses: List<String>
+    ): List<GeoPoint> {
+        val geoPoints = mutableListOf<GeoPoint>()
+        val geocoder = Geocoder(context, Locale.getDefault())
+        for (address in addresses) {
+            try {
+                val results = geocoder.getFromLocationName(address, 1)
+                if (!results.isNullOrEmpty()) {
+                    val location = results[0]
+                    val currentGeoPoint = GeoPoint(location.latitude, location.longitude)
+                    geoPoints.add(currentGeoPoint)
+                } else {
+                    Log.d("FavoriteSaveManager", "No location found for address: $address")
+                }
+            } catch (e: Exception) {
+                Log.d("FavoriteSaveManager", "Error geocoding address: $address", e)
+            }
+        }
+        return geoPoints
     }
 }
