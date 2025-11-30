@@ -139,7 +139,13 @@ class FavoritesFragment : Fragment() {
             (16 * resources.displayMetrics.density).toInt()
         )
         textView.textSize = 14f
-        textView.setTextColor(android.graphics.Color.parseColor("#333333"))
+        val isDarkTheme = (resources.configuration.uiMode and 
+            android.content.res.Configuration.UI_MODE_NIGHT_MASK) == 
+            android.content.res.Configuration.UI_MODE_NIGHT_YES
+        textView.setTextColor(
+            if (isDarkTheme) android.graphics.Color.WHITE 
+            else android.graphics.Color.parseColor("#333333")
+        )
         textView.textAlignment = android.view.View.TEXT_ALIGNMENT_TEXT_START
         textView.setTextIsSelectable(true)
         

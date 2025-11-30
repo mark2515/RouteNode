@@ -1,5 +1,7 @@
 package moe.group13.routenode.ui.account
 
+import android.content.res.Configuration
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,8 +25,22 @@ class SavedLocationAdapter(
     inner class LocationHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         fun bind(item: LocationItem) {
-            itemView.findViewById<TextView>(R.id.txtLocationName).text = item.name
-            itemView.findViewById<TextView>(R.id.txtLocationAddress).text = item.address
+            val nameTextView = itemView.findViewById<TextView>(R.id.txtLocationName)
+            val addressTextView = itemView.findViewById<TextView>(R.id.txtLocationAddress)
+            
+            nameTextView.text = item.name
+            addressTextView.text = item.address
+
+            val isDarkTheme = (itemView.context.resources.configuration.uiMode and 
+                Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+            
+            if (isDarkTheme) {
+                nameTextView.setTextColor(Color.WHITE)
+                addressTextView.setTextColor(Color.WHITE)
+            } else {
+                nameTextView.setTextColor(Color.parseColor("#000000"))
+                addressTextView.setTextColor(Color.parseColor("#555555"))
+            }
 
             // Optional: handle click (open map)
             itemView.setOnClickListener {
