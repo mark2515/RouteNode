@@ -59,6 +59,11 @@ class SignInActivity : AppCompatActivity() {
         binding.SignUpTV.text = spannableSignUp
         binding.SignUpTV.movementMethod = LinkMovementMethod.getInstance()
 
+        binding.forgotPasswordTV.setOnClickListener {
+            val intent = Intent(this, ForgotPasswordActivity::class.java)
+            startActivity(intent)
+        }
+
         binding.SignInBtn.setOnClickListener {
             // Disable the button to prevent multiple clicks
             binding.SignInBtn.isEnabled = false
