@@ -23,6 +23,7 @@ import moe.group13.routenode.R
 import moe.group13.routenode.auth.SignInActivity
 import org.json.JSONObject
 import moe.group13.routenode.BuildConfig
+import android.location.Geocoder
 
 class AccountFragment : Fragment() {
 
@@ -33,6 +34,7 @@ class AccountFragment : Fragment() {
     private lateinit var emailTextView: TextView
     private lateinit var profileImage: ImageView
 
+    private lateinit var weatherCity: TextView
     private lateinit var weatherEmoji: TextView
     private lateinit var weatherTemp: TextView
     private lateinit var weatherStatus: TextView
@@ -50,7 +52,6 @@ class AccountFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // UI
         val myProfileBtn = view.findViewById<LinearLayout>(R.id.myProfileBtn)
         val settingsBtn = view.findViewById<LinearLayout>(R.id.SettingsBtn)
         val aiModelsBtn = view.findViewById<LinearLayout>(R.id.AIModelsBtn)
@@ -60,11 +61,12 @@ class AccountFragment : Fragment() {
         emailTextView = view.findViewById(R.id.EmailTV)
         profileImage = view.findViewById(R.id.profileImageView)
 
+        // WEATHER UI
+        weatherCity = view.findViewById(R.id.txtWeatherCity)
         weatherEmoji = view.findViewById(R.id.txtWeatherEmoji)
         weatherTemp = view.findViewById(R.id.txtWeatherTemp)
         weatherStatus = view.findViewById(R.id.txtWeatherStatus)
 
-        // Load user info
         loadAccountInfo()
 
         myProfileBtn.setOnClickListener {
@@ -96,12 +98,10 @@ class AccountFragment : Fragment() {
 
     private fun loadAccountInfo() {
         val user = auth.currentUser ?: return
-        val uid = user.uid
-
         emailTextView.text = user.email ?: "Unknown Email"
 
         db.collection("users")
-            .document(uid)
+            .document(user.uid)
             .collection("profile")
             .document("info")
             .get()
@@ -123,8 +123,8 @@ class AccountFragment : Fragment() {
         val ctx = requireContext()
 
         if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED) {
-
+            != PackageManager.PERMISSION_GRANTED
+        ) {
             ActivityCompat.requestPermissions(
                 requireActivity(),
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
@@ -142,11 +142,12 @@ class AccountFragment : Fragment() {
     ) {
         if (requestCode == requestCodeLocation &&
             grantResults.isNotEmpty() &&
-            grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
+            grantResults[0] == PackageManager.PERMISSION_GRANTED
+        ) {
             loadUserLocation()
         }
     }
+
     private fun loadUserLocation() {
         val context = requireContext()
 
@@ -164,7 +165,9 @@ class AccountFragment : Fragment() {
         try {
             fused.lastLocation.addOnSuccessListener { loc ->
                 if (loc != null) {
-                    loadWeather(loc.latitude, loc.longitude)
+                    getCityName(loc.latitude, loc.longitude) { city ->
+                        loadWeather(loc.latitude, loc.longitude, city)
+                    }
                 } else {
                     weatherStatus.text = "Location unavailable"
                 }
@@ -174,8 +177,27 @@ class AccountFragment : Fragment() {
         }
     }
 
+    private fun getCityName(lat: Double, lon: Double, callback: (String) -> Unit) {
+        try {
+            val geocoder = Geocoder(requireContext())
+            val results = geocoder.getFromLocation(lat, lon, 1)
 
-    private fun loadWeather(lat: Double, lon: Double) {
+            if (!results.isNullOrEmpty()) {
+                val city = results[0].locality
+                    ?: results[0].subAdminArea
+                    ?: results[0].adminArea
+                    ?: "Unknown Location"
+
+                callback(city)
+            } else {
+                callback("Unknown Location")
+            }
+        } catch (e: Exception) {
+            callback("Unknown Location")
+        }
+    }
+
+    private fun loadWeather(lat: Double, lon: Double, city: String) {
         val apiKey = BuildConfig.OPENWEATHER_API_KEY
 
         val url =
@@ -201,11 +223,13 @@ class AccountFragment : Fragment() {
                     else -> "🌤️"
                 }
 
+                weatherCity.text = city
                 weatherEmoji.text = emoji
                 weatherTemp.text = "$temp°C"
                 weatherStatus.text = condition
             },
             {
+                weatherCity.text = city
                 weatherStatus.text = "Error"
             }
         )
