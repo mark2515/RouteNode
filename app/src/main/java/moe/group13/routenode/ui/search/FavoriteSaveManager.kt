@@ -143,7 +143,7 @@ class FavoriteSaveManager(
         routeNodeAdapter.reset()
         viewModel.clearAiResponse()
     }
-
+    //use google geocoder to convert addresses to geopoints, for google maps pins
     private fun convertAddressesToGeoPoints(
         context: Context,
         addresses: List<String>

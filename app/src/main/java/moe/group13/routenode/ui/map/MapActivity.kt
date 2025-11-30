@@ -155,8 +155,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         getCurrentLocation { userLocation ->
             val baseUrl = StringBuilder("https://www.google.com/maps/dir/")
             baseUrl.append("${userLocation.latitude},${userLocation.longitude}/")
-            route.waypoints.forEach { waypoint ->
-                baseUrl.append("${waypoint.latitude},${waypoint.longitude}/")
+            route.tags.forEach { tag ->
+                baseUrl.append("$tag/")
             }
             val gmmIntentUri = Uri.parse(baseUrl.toString())
             val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)

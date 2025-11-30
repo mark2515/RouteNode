@@ -8,7 +8,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.PolyUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import moe.group13.routenode.data.model.Route
 import moe.group13.routenode.data.repository.RouteRepository
 import okhttp3.OkHttpClient
