@@ -110,20 +110,14 @@ class MapEditFragment : Fragment() {
             override fun onError(status: Status) {
             }
         })
-
+        // swap button functionality
         swapButton.setOnClickListener {
             val selectedTag = tagAdapter.getSelectedTag()
             val selectedPlaceName = selectedPlace?.name
-            Log.d("MapEditFragment", "Selected Place: $selectedPlaceName")
-            Log.d("MapEditFragment", "Selected Tag: $selectedTag")
             if (selectedTag == null || selectedPlaceName == null) {
                 return@setOnClickListener
             }
             val selectedLatLng = selectedPlace!!.latLng!!
-            Log.d(
-                "MapEditFragment",
-                "Swapping: Place '${selectedPlaceName}' at (lat=${selectedLatLng.latitude}, lng=${selectedLatLng.longitude}) <-> Tag '${selectedTag}'"
-            )
             //swap
             routeRepository.swap(routeId!!, selectedTag, selectedPlaceName, selectedLatLng)
             //tell activity that fragment swap is done
