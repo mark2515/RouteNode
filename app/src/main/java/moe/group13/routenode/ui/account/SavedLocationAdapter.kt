@@ -5,11 +5,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import moe.group13.routenode.ui.account.LocationItem
 import moe.group13.routenode.R
 
-class SavedLocationAdapter :
-    RecyclerView.Adapter<SavedLocationAdapter.LocationHolder>() {
+class SavedLocationAdapter(
+    private val onItemClick: ((LocationItem) -> Unit)? = null
+) : RecyclerView.Adapter<SavedLocationAdapter.LocationHolder>() {
 
     private var list: List<LocationItem> = emptyList()
 
@@ -18,10 +18,18 @@ class SavedLocationAdapter :
         notifyDataSetChanged()
     }
 
-    class LocationHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    fun getItemAt(position: Int): LocationItem = list[position]
+
+    inner class LocationHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
         fun bind(item: LocationItem) {
             itemView.findViewById<TextView>(R.id.txtLocationName).text = item.name
             itemView.findViewById<TextView>(R.id.txtLocationAddress).text = item.address
+
+            // Optional: handle click (open map)
+            itemView.setOnClickListener {
+                onItemClick?.invoke(item)
+            }
         }
     }
 
@@ -35,5 +43,5 @@ class SavedLocationAdapter :
         holder.bind(list[position])
     }
 
-    override fun getItemCount() = list.size
+    override fun getItemCount(): Int = list.size
 }

@@ -10,15 +10,16 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/black"
-        app:titleTextColor="@color/white"
         app:title="Common Places"
+        app:titleTextColor="@color/white"
         app:navigationIcon="@drawable/ic_arrow_back_24" />
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:padding="20dp">
+        android:padding="20dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:orientation="vertical"
@@ -26,7 +27,7 @@
             android:layout_height="wrap_content">
 
             <TextView
-                android:text="Search Place"
+                android:text="Place Name"
                 android:textStyle="bold"
                 android:textSize="18sp"
                 android:layout_width="wrap_content"
@@ -37,7 +38,7 @@
                 android:id="@+id/editPlace"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="e.g., an Instagrammable café"
+                android:hint="e.g. Cute Café, Anime Store, Library"
                 android:inputType="text"
                 android:background="@drawable/bg_input_rect"
                 android:textColor="@color/input_text"
@@ -79,10 +80,11 @@
                 android:id="@+id/recyclerPlaces"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:visibility="gone" />
+                android:nestedScrollingEnabled="false"
+                android:visibility="visible" />
 
         </LinearLayout>
 
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>

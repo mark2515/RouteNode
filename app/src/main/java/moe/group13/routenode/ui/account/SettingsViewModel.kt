@@ -12,8 +12,9 @@ class SettingsViewModel : ViewModel() {
     private val firestore = FirebaseFirestore.getInstance()
     private val uid = FirebaseAuth.getInstance().currentUser?.uid
 
+    // Live lists
     val savedLocations = MutableLiveData<List<LocationItem>>()
-
+    val savedPlaces = MutableLiveData<List<LocationItem>>()
     fun saveLocation(address: String, name: String) {
         if (uid == null) return
 
@@ -47,6 +48,71 @@ class SettingsViewModel : ViewModel() {
                 savedLocations.value = list
             }
     }
+
+    fun deleteLocation(name: String, address: String) {
+        if (uid == null) return
+
+        firestore.collection("users")
+            .document(uid)
+            .collection("saved_locations")
+            .whereEqualTo("name", name)
+            .whereEqualTo("address", address)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                for (doc in snapshot.documents) {
+                    doc.reference.delete()
+                }
+            }
+    }
+
+    fun savePlace(placeName: String) {
+        if (uid == null) return
+
+        val data = hashMapOf(
+            "name" to placeName,
+            "createdAt" to FieldValue.serverTimestamp()
+        )
+
+        firestore.collection("users")
+            .document(uid)
+            .collection("saved_places")
+            .add(data)
+    }
+
+    fun loadPlaces() {
+        if (uid == null) return
+
+        firestore.collection("users")
+            .document(uid)
+            .collection("saved_places")
+            .orderBy("createdAt", Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, _ ->
+                val list = snapshot?.documents?.map {
+                    LocationItem(
+                        name = it.getString("name") ?: "",
+                        address = ""   // << we aren't using address here
+                    )
+                } ?: emptyList()
+
+                savedPlaces.value = list
+            }
+    }
+
+    fun deletePlace(name: String) {
+        if (uid == null) return
+
+        firestore.collection("users")
+            .document(uid)
+            .collection("saved_places")
+            .whereEqualTo("name", name)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                for (doc in snapshot.documents) {
+                    doc.reference.delete()
+                }
+            }
+    }
+
 }
 
 data class LocationItem(

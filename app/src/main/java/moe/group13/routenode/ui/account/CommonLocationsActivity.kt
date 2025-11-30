@@ -6,6 +6,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.ItemTouchHelper
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.PlacesClient
@@ -38,6 +39,7 @@ class CommonLocationsActivity : AppCompatActivity() {
         setupAddressSearch()
         setupViewModel()
         setupSaveButton()
+        setupSwipeToDelete()   // <-- Add swipe behavior
     }
 
     private fun setupTopAppBar() {
@@ -66,9 +68,8 @@ class CommonLocationsActivity : AppCompatActivity() {
         locationAdapter = SavedLocationAdapter()
 
         recyclerLocations.adapter = locationAdapter
-        recyclerLocations.layoutManager = LinearLayoutManager(this)   // REQUIRED
+        recyclerLocations.layoutManager = LinearLayoutManager(this)
 
-        // Load Firestore data
         viewModel.loadLocations()
 
         viewModel.savedLocations.observe(this) { list ->
@@ -91,18 +92,9 @@ class CommonLocationsActivity : AppCompatActivity() {
                     selectedPlace = place
                     editAddress.setText(place.address ?: selectedItem.toString())
                     editAddress.dismissDropDown()
-
-                    Toast.makeText(
-                        this,
-                        "Selected: ${place.name}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this, "Selected: ${place.name}", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(
-                        this,
-                        "Could not get place details",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(this, "Could not get place details", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -145,6 +137,34 @@ class CommonLocationsActivity : AppCompatActivity() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    private fun setupSwipeToDelete() {
+        val swipeCallback = object : ItemTouchHelper.SimpleCallback(
+            0,
+            ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
+        ) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.adapterPosition
+                val item = locationAdapter.getItemAt(position)
+
+                viewModel.deleteLocation(item.name, item.address)
+
+                Toast.makeText(
+                    this@CommonLocationsActivity,
+                    "Deleted: ${item.name}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+        ItemTouchHelper(swipeCallback).attachToRecyclerView(recyclerLocations)
     }
 
     override fun onDestroy() {
