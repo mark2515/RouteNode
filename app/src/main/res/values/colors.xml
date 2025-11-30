@@ -36,4 +36,7 @@
 
     <!-- Icon colors -->
     <color name="icon_gray">#666666</color>
+    
+    <!-- Launcher icon background -->
+    <color name="ic_launcher_background">#4CAF50</color>
 </resources>
