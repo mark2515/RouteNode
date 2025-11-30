@@ -1,13 +1,16 @@
 package moe.group13.routenode.ui.account
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.text.Html
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.MaterialToolbar
 import kotlinx.coroutines.launch
@@ -29,12 +32,11 @@ class SettingsActivity : AppCompatActivity() {
 
     private val PREFS = "route_settings"
     private val routeRepository = RouteRepository()
+    private val LOCATION_REQUEST_CODE = 1234
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
         applySavedTheme()
-
+        super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
 
         setupTopAppBar()
@@ -74,7 +76,12 @@ class SettingsActivity : AppCompatActivity() {
                 position: Int, id: Long
             ) {
                 prefs.edit().putInt("theme_index", position).apply()
-                updateTheme(position)
+
+                if (position == 3) {
+                    ensureLocationPermissionAndApplyAuto()
+                } else {
+                    updateTheme(position)
+                }
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {}
@@ -92,22 +99,18 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         layoutCommonLocations.setOnClickListener {
-            val intent = Intent(this, CommonLocationsActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, CommonLocationsActivity::class.java))
         }
 
         layoutCommonPlaces.setOnClickListener {
-            val intent = Intent(this, CommonPlacesActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, CommonPlacesActivity::class.java))
         }
 
         btnClearHistory.setOnClickListener {
             AlertDialog.Builder(this)
                 .setTitle("Clear History")
                 .setMessage("Are you sure you want to clear all favorite routes? This action cannot be undone.")
-                .setPositiveButton("Yes") { _, _ ->
-                    clearAllFavoriteRoutes()
-                }
+                .setPositiveButton("Yes") { _, _ -> clearAllFavoriteRoutes() }
                 .setNegativeButton("Cancel", null)
                 .show()
         }
@@ -118,9 +121,7 @@ class SettingsActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        btnHelp.setOnClickListener {
-            showHelpAndFaqDialog()
-        }
+        btnHelp.setOnClickListener { showHelpAndFaqDialog() }
 
         btnAbout.setOnClickListener {
             val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://route-node-webpage.vercel.app/"))
@@ -131,7 +132,6 @@ class SettingsActivity : AppCompatActivity() {
     private fun setupTopAppBar() {
         val toolbar = findViewById<MaterialToolbar>(R.id.topAppBar)
         toolbar.setNavigationOnClickListener {
-            // Return to the Account screen
             onBackPressedDispatcher.onBackPressed()
         }
     }
@@ -141,38 +141,65 @@ class SettingsActivity : AppCompatActivity() {
             0 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             1 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
             2 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            3 -> ThemeManager.applyAutoTheme(this)
         }
     }
 
     private fun applySavedTheme() {
         val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val index = prefs.getInt("theme_index", 0)
-        updateTheme(index)
+
+        if (index == 3) {
+            ThemeManager.applyAutoTheme(this)
+        } else {
+            updateTheme(index)
+        }
+    }
+
+    private fun ensureLocationPermissionAndApplyAuto() {
+        val fine = Manifest.permission.ACCESS_FINE_LOCATION
+        val coarse = Manifest.permission.ACCESS_COARSE_LOCATION
+
+        val hasPermission =
+            ContextCompat.checkSelfPermission(this, fine) == PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(this, coarse) == PackageManager.PERMISSION_GRANTED
+
+        if (hasPermission) {
+            ThemeManager.applyAutoTheme(this)
+        } else {
+            requestPermissions(arrayOf(fine, coarse), LOCATION_REQUEST_CODE)
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == LOCATION_REQUEST_CODE) {
+            val granted = grantResults.isNotEmpty() && grantResults.any { it == PackageManager.PERMISSION_GRANTED }
+            if (granted) {
+                ThemeManager.applyAutoTheme(this)
+            } else {
+                Toast.makeText(this, "Location permission required for Auto theme", Toast.LENGTH_SHORT).show()
+                spinnerTheme.setSelection(0) // fallback
+            }
+        }
     }
 
     private fun clearAllFavoriteRoutes() {
         lifecycleScope.launch {
             try {
                 val success = routeRepository.clearAllFavorites()
-                if (success) {
-                    Toast.makeText(
-                        this@SettingsActivity,
-                        "All favorite routes have been cleared",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    Toast.makeText(
-                        this@SettingsActivity,
-                        "Failed to clear favorites. Please try again.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            } catch (e: Exception) {
                 Toast.makeText(
                     this@SettingsActivity,
-                    "Error: ${e.message}",
+                    if (success) "All favorite routes have been cleared" else "Failed to clear favorites.",
                     Toast.LENGTH_SHORT
                 ).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@SettingsActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -181,28 +208,27 @@ class SettingsActivity : AppCompatActivity() {
         val faqContent = """
             <b>Q: How is your app's place recommendation different from Google Maps?</b>
             <br/><br/>
-            A: Google Maps shows places based on real-world data like user reviews, ratings, and popularity. Our AI, on the other hand, uses semantic reasoning from the information it was trained on, so it's better at understanding vague requests like "a library where I can plug in my laptop." It can also help plan routes in a more flexible, natural way.
+            A: Google Maps shows places based on real-world data like user reviews and popularity. Our AI uses semantic reasoning and understands vague requests like "a quiet cafe to study".
             <br/><br/><br/>
-            <b>Q: If your app uses a large language model, why can't I just ask ChatGPT directly?</b>
+            <b>Q: Why not just ask ChatGPT?</b>
             <br/><br/>
-            A: You can, but the process is pretty complicated. If you want to visit multiple places, you have to give ChatGPT the exact address for every stop, and you also need to phrase your request very clearly so it understands. Our app makes this much easier. With Google Maps Place Autocomplete, you only need to enter part of the address. You just fill out a simple form, so you don't need perfect wording, and the AI gives you a clean, structured answer. You can also save your favorite routes and jump straight into Google Maps navigation with one tap.
+            A: You can — but you'd need to type exact addresses for each stop. Our app combines Google Maps Autocomplete + route logic + instant navigation.
         """.trimIndent()
 
         val scrollView = ScrollView(this)
-        val textView = TextView(this)
-        textView.text = Html.fromHtml(faqContent, Html.FROM_HTML_MODE_LEGACY)
-        textView.textSize = 16f
-        textView.setPadding(60, 40, 60, 40)
-        textView.setTextIsSelectable(true)
-        
+        val textView = TextView(this).apply {
+            text = Html.fromHtml(faqContent, Html.FROM_HTML_MODE_LEGACY)
+            textSize = 16f
+            setPadding(60, 40, 60, 40)
+            setTextIsSelectable(true)
+        }
+
         scrollView.addView(textView)
-        
+
         AlertDialog.Builder(this)
             .setTitle("Help & FAQ")
             .setView(scrollView)
-            .setPositiveButton("OK") { dialog, _ ->
-                dialog.dismiss()
-            }
+            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
             .show()
     }
 }
