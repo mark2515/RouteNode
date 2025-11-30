@@ -48,6 +48,9 @@ class SignInActivity : AppCompatActivity() {
 
         binding.SignUpTV.setTextColor(textColor)
         binding.forgotPasswordTV.setTextColor(textColor)
+        
+        val buttonBackgroundColor = if (isDarkTheme) Color.GRAY else Color.BLACK
+        binding.SignInBtn.backgroundTintList = android.content.res.ColorStateList.valueOf(buttonBackgroundColor)
 
         val signUpText = "Not Registered Yet, Sign Up!"
         val spannableSignUp = SpannableString(signUpText)

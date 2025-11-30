@@ -5,6 +5,8 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import android.graphics.Color
+import android.content.res.Configuration
 import com.google.firebase.auth.FirebaseAuth
 import moe.group13.routenode.R
 
@@ -20,6 +22,11 @@ class ForgotPasswordActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         emailEditText = findViewById(R.id.emailEditText)
         resetButton = findViewById(R.id.resetPasswordBtn)
+
+        val isDarkTheme = (resources.configuration.uiMode and 
+            Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        val buttonBackgroundColor = if (isDarkTheme) Color.GRAY else Color.BLACK
+        resetButton.backgroundTintList = android.content.res.ColorStateList.valueOf(buttonBackgroundColor)
 
         resetButton.setOnClickListener {
             val email = emailEditText.text.toString().trim()
