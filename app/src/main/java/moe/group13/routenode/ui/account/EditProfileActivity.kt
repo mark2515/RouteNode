@@ -27,6 +27,12 @@ class EditProfileActivity : AppCompatActivity() {
     private val db = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance()
 
+    companion object {
+        private const val KEY_NAME = "saved_name"
+        private const val KEY_BIO = "saved_bio"
+        private const val KEY_PHOTO_URI = "saved_photo_uri"
+    }
+
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
@@ -42,7 +48,12 @@ class EditProfileActivity : AppCompatActivity() {
 
         setupTopAppBar()
         initViews()
-        loadExistingData()
+
+        if (savedInstanceState != null) {
+            restoreInstanceState(savedInstanceState)
+        } else {
+            loadExistingData()
+        }
 
         btnSave.setOnClickListener { saveProfile() }
         btnChangePhoto.setOnClickListener { pickImageLauncher.launch("image/*") }
@@ -131,5 +142,49 @@ class EditProfileActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(intent)
         finish()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // Save current input values to survive rotation
+        outState.putString(KEY_NAME, inputName.text.toString())
+        outState.putString(KEY_BIO, inputBio.text.toString())
+        selectedPhotoUri?.let { 
+            outState.putString(KEY_PHOTO_URI, it.toString())
+        }
+    }
+
+    private fun restoreInstanceState(savedInstanceState: Bundle) {
+        // Restore input values after rotation
+        val savedName = savedInstanceState.getString(KEY_NAME, "")
+        val savedBio = savedInstanceState.getString(KEY_BIO, "")
+        val savedPhotoUriString = savedInstanceState.getString(KEY_PHOTO_URI)
+
+        inputName.setText(savedName)
+        inputBio.setText(savedBio)
+
+        // Restore selected photo if it exists
+        if (savedPhotoUriString != null) {
+            selectedPhotoUri = Uri.parse(savedPhotoUriString)
+            Glide.with(this).load(selectedPhotoUri).into(profileImage)
+        } else {
+            loadExistingProfilePhoto()
+        }
+    }
+
+    private fun loadExistingProfilePhoto() {
+        val uid = auth.currentUser?.uid ?: return
+
+        db.collection("users")
+            .document(uid)
+            .collection("profile")
+            .document("info")
+            .get()
+            .addOnSuccessListener { doc ->
+                val photoUrl = doc.getString("photoUrl")
+                if (!photoUrl.isNullOrEmpty()) {
+                    Glide.with(this).load(photoUrl).into(profileImage)
+                }
+            }
     }
 }
