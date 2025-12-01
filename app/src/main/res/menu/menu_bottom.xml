@@ -9,11 +9,11 @@
         android:icon="@android:drawable/btn_star_big_off"
         android:title="Favorites" />
     <item
-        android:id="@+id/nav_account"
-        android:icon="@android:drawable/ic_menu_myplaces"
-        android:title="Account" />
-    <item
         android:id="@+id/map_test"
         android:icon="@android:drawable/ic_dialog_map"
         android:title="Map"/>
+    <item
+        android:id="@+id/nav_account"
+        android:icon="@android:drawable/ic_menu_myplaces"
+        android:title="Account" />
 </menu>
