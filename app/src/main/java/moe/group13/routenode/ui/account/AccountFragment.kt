@@ -41,6 +41,17 @@ class AccountFragment : Fragment() {
 
     private val requestCodeLocation = 2001
 
+    // State variables to preserve across rotation
+    private var cachedName: String? = null
+    private var cachedEmail: String? = null
+    private var cachedPhotoUrl: String? = null
+
+    companion object {
+        private const val KEY_NAME = "cached_name"
+        private const val KEY_EMAIL = "cached_email"
+        private const val KEY_PHOTO_URL = "cached_photo_url"
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -66,6 +77,26 @@ class AccountFragment : Fragment() {
         weatherEmoji = view.findViewById(R.id.txtWeatherEmoji)
         weatherTemp = view.findViewById(R.id.txtWeatherTemp)
         weatherStatus = view.findViewById(R.id.txtWeatherStatus)
+
+        // Restore cached data if available
+        if (savedInstanceState != null) {
+            cachedName = savedInstanceState.getString(KEY_NAME)
+            cachedEmail = savedInstanceState.getString(KEY_EMAIL)
+            cachedPhotoUrl = savedInstanceState.getString(KEY_PHOTO_URL)
+            
+            // Immediately display cached data to prevent flicker
+            if (cachedName != null) {
+                nameTextView.text = cachedName
+            }
+            if (cachedEmail != null) {
+                emailTextView.text = cachedEmail
+            }
+            if (cachedPhotoUrl != null && isAdded) {
+                Glide.with(requireContext())
+                    .load(cachedPhotoUrl)
+                    .into(profileImage)
+            }
+        }
 
         loadAccountInfo()
 
@@ -98,7 +129,9 @@ class AccountFragment : Fragment() {
 
     private fun loadAccountInfo() {
         val user = auth.currentUser ?: return
-        emailTextView.text = user.email ?: "Unknown Email"
+        val email = user.email ?: "Unknown Email"
+        emailTextView.text = email
+        cachedEmail = email
 
         db.collection("users")
             .document(user.uid)
@@ -109,14 +142,26 @@ class AccountFragment : Fragment() {
                 val name = doc.getString("name") ?: "User"
                 val photoUrl = doc.getString("photoUrl")
 
+                // Cache the data for rotation
+                cachedName = name
+                cachedPhotoUrl = photoUrl
+
                 nameTextView.text = name
 
-                if (!photoUrl.isNullOrEmpty()) {
+                if (!photoUrl.isNullOrEmpty() && isAdded) {
                     Glide.with(requireContext())
                         .load(photoUrl)
                         .into(profileImage)
                 }
             }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // Save current profile data to survive rotation
+        cachedName?.let { outState.putString(KEY_NAME, it) }
+        cachedEmail?.let { outState.putString(KEY_EMAIL, it) }
+        cachedPhotoUrl?.let { outState.putString(KEY_PHOTO_URL, it) }
     }
 
     private fun checkLocationPermission() {

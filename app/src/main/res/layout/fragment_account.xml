@@ -29,7 +29,7 @@
 
             <TextView
                 android:id="@+id/NameTV"
-                android:text="John Smith"
+                android:text=""
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:layout_width="wrap_content"
@@ -37,7 +37,7 @@
 
             <TextView
                 android:id="@+id/EmailTV"
-                android:text="johnsmith1131@gmail.com"
+                android:text=""
                 android:textSize="14sp"
                 android:textColor="#777"
                 android:layout_width="wrap_content"
