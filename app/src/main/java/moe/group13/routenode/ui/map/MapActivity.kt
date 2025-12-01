@@ -30,11 +30,12 @@ import moe.group13.routenode.data.repository.RouteRepository
 
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
-    private lateinit var googleMap: GoogleMap
+    private var googleMap: GoogleMap? = null
     private lateinit var mapViewModel: MapViewModel
     lateinit var favoritesRecycler: RecyclerView
     private var selectedMode: String = "driving"
     private var currentPolyline: Polyline? = null
+    private var isMapReady = false
 
 
     companion object {
@@ -55,7 +56,11 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         mapViewModel = ViewModelProvider(this, MapViewModelFactory(repository))
             .get(MapViewModel::class.java)
 
-        mapViewModel.loadFavorites()
+        // Load favorites only on first creation
+        if (savedInstanceState == null) {
+            mapViewModel.loadFavorites()
+        }
+        
         mapViewModel.favorites.observe(this) { favList ->
             favoritesRecycler.adapter = FavoritesAdapter(
                 favorites = favList,
@@ -70,12 +75,18 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             .findFragmentById(R.id.map_fragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        mapViewModel.selectedRoute.observe(this) { route ->
+            if (route != null && isMapReady) {
+                drawMarkersForRoute(route)
+            }
+        }
+
+        // Observe polyline points
         mapViewModel.polylinePoints.observe(this) { points ->
-            if (points.isNotEmpty()) {
+            if (points.isNotEmpty() && isMapReady && googleMap != null) {
                 currentPolyline?.remove()
-                currentPolyline = googleMap.addPolyline(
+                currentPolyline = googleMap?.addPolyline(
                     PolylineOptions().addAll(points)
-                        .addAll(points)
                         .color(Color.BLUE)
                         .width(8f)
                 )
@@ -95,7 +106,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
-        googleMap.uiSettings.isZoomControlsEnabled = true
+        isMapReady = true
+        googleMap?.uiSettings?.isZoomControlsEnabled = true
 
         // Check location permissions
         if (ActivityCompat.checkSelfPermission(
@@ -103,7 +115,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            googleMap.isMyLocationEnabled = true
+            googleMap?.isMyLocationEnabled = true
         } else {
             ActivityCompat.requestPermissions(
                 this,
@@ -111,29 +123,22 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 LOCATION_PERMISSION_REQUEST_CODE
             )
         }
+
+        // Restore selected route after rotation
+        mapViewModel.selectedRoute.value?.let { route ->
+            drawMarkersForRoute(route)
+        }
     }
 
     private fun onRowClick(route: Route) {
-        if (!::googleMap.isInitialized) return
-        //draw map pins when user clicks
-        googleMap.clear()
-
-        //draw the markers
-        route.waypoints.forEachIndexed { index, point ->
-            val latLng = LatLng(point.latitude, point.longitude)
-            // use the tag at the same index if it exists, else fallback to route.title
-            val markerTitle = route.tags.getOrNull(index) ?: route.title
-            googleMap.addMarker(
-                MarkerOptions().position(latLng)
-                    .title(markerTitle)
-            )
-        }
-
-        //zoom to the first area
-        route.waypoints.firstOrNull()?.let { first ->
-            val latLng = LatLng(first.latitude, first.longitude)
-            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
-        }
+        if (!isMapReady || googleMap == null) return
+        
+        // Store the selected route in ViewModel (survives rotation)
+        mapViewModel.setSelectedRoute(route)
+        
+        // Draw markers
+        drawMarkersForRoute(route)
+        
         //get our location and generate polyline for preview
         getCurrentLocation { userLocation ->
             mapViewModel.fetchPolyline(
@@ -143,8 +148,30 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 selectedMode
             )
         }
-        //draw the polyline
+    }
 
+    private fun drawMarkersForRoute(route: Route) {
+        val map = googleMap ?: return
+        
+        //draw map pins when user clicks
+        map.clear()
+
+        //draw the markers
+        route.waypoints.forEachIndexed { index, point ->
+            val latLng = LatLng(point.latitude, point.longitude)
+            // use the tag at the same index if it exists, else fallback to route.title
+            val markerTitle = route.tags.getOrNull(index) ?: route.title
+            map.addMarker(
+                MarkerOptions().position(latLng)
+                    .title(markerTitle)
+            )
+        }
+
+        //zoom to the first area
+        route.waypoints.firstOrNull()?.let { first ->
+            val latLng = LatLng(first.latitude, first.longitude)
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+        }
     }
 
     //idea: https://developer.android.com/guide/components/google-maps-intents
@@ -190,9 +217,26 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
 
         supportFragmentManager.beginTransaction()
             .replace(R.id.overlay_fragment_container, editFragment)
-            .addToBackStack(null)
+            .addToBackStack("edit_fragment")
             .commit()
         findViewById<FrameLayout>(R.id.overlay_fragment_container).visibility = View.VISIBLE
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // Save fragment visibility state
+        outState.putInt("overlay_visibility", findViewById<FrameLayout>(R.id.overlay_fragment_container).visibility)
+        outState.putInt("recycler_visibility", favoritesRecycler.visibility)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        // Restore fragment visibility state
+        val overlayVisibility = savedInstanceState.getInt("overlay_visibility", View.GONE)
+        val recyclerVisibility = savedInstanceState.getInt("recycler_visibility", View.VISIBLE)
+        
+        findViewById<FrameLayout>(R.id.overlay_fragment_container).visibility = overlayVisibility
+        favoritesRecycler.visibility = recyclerVisibility
     }
 
 
@@ -203,10 +247,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
+            ) != PackageManager.PERMISSION_GRANTED
         ) {
-            googleMap.isMyLocationEnabled = true
-        } else {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),

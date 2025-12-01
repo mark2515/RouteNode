@@ -25,6 +25,10 @@ class MapViewModel(private val repository: RouteRepository) : ViewModel() {
     private val _polylinePoints = MutableLiveData<List<LatLng>>()
     val polylinePoints: LiveData<List<LatLng>> = _polylinePoints
 
+    // Currently selected route for preview
+    private val _selectedRoute = MutableLiveData<Route?>()
+    val selectedRoute: LiveData<Route?> = _selectedRoute
+
     // Optional: errors
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
@@ -104,11 +108,25 @@ class MapViewModel(private val repository: RouteRepository) : ViewModel() {
 
     fun getCurrentUserRouteById(routeId: String): LiveData<Route?> {
         val result = MutableLiveData<Route?>()
-        viewModelScope.launch {
-            val route = repository.getCurrentUserFavoriteRouteById(routeId)
-            result.postValue(route)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val route = repository.getCurrentUserFavoriteRouteById(routeId)
+                result.postValue(route)
+            } catch (e: Exception) {
+                result.postValue(null)
+                _errorMessage.postValue(e.message)
+            }
         }
         return result
+    }
+
+    fun setSelectedRoute(route: Route?) {
+        _selectedRoute.value = route
+    }
+
+    // Clear polyline
+    fun clearPolyline() {
+        _polylinePoints.value = emptyList()
     }
 
 }
