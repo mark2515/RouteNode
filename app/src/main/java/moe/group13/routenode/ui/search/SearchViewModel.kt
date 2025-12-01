@@ -17,6 +17,8 @@ class SearchViewModel(
     val isLoading = MutableLiveData<Boolean>(false)
     val errorMessage = MutableLiveData<String?>()
     
+    private var savedRouteNodeData: List<RouteNodeAdapter.RouteNodeData>? = null
+    
     fun askAIForAdvice() {
         viewModelScope.launch {
             try {
@@ -113,5 +115,18 @@ class SearchViewModel(
     
     fun clearAiResponse() {
         aiResponse.value = null
+    }
+    
+    // Save and restore route node data for configuration changes
+    fun saveRouteNodeData(data: List<RouteNodeAdapter.RouteNodeData>) {
+        savedRouteNodeData = data.map { it.copy() }
+    }
+    
+    fun getSavedRouteNodeData(): List<RouteNodeAdapter.RouteNodeData>? {
+        return savedRouteNodeData?.map { it.copy() }
+    }
+    
+    fun clearSavedRouteNodeData() {
+        savedRouteNodeData = null
     }
 }

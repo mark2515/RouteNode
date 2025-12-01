@@ -53,8 +53,11 @@ class SearchFragment : Fragment() {
         recycler.layoutManager = LinearLayoutManager(requireContext())
 
         // Initialize adapter first
+        val initialData = viewModel.getSavedRouteNodeData()?.toMutableList() 
+            ?: mutableListOf(RouteNodeAdapter.RouteNodeData(no = 1))
+        
         routeNodeAdapter = RouteNodeAdapter(
-            mutableListOf(RouteNodeAdapter.RouteNodeData(no = 1)),
+            initialData,
             placesClient,
             onRetryAi = {
                 if (::aiAdviceManager.isInitialized) {
@@ -149,6 +152,13 @@ class SearchFragment : Fragment() {
         // Check for edit route data
         if (::editModeManager.isInitialized) {
             editModeManager.checkForEditRoute()
+        }
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        if (::routeNodeAdapter.isInitialized) {
+            viewModel.saveRouteNodeData(routeNodeAdapter.getRouteNodeData())
         }
     }
 
