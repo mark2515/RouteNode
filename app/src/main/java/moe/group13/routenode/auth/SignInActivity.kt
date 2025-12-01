@@ -15,6 +15,7 @@ import android.graphics.Color
 import android.content.res.Configuration
 import android.view.View
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import moe.group13.routenode.MainActivity
 import moe.group13.routenode.databinding.ActivitySignInBinding
 
@@ -22,6 +23,19 @@ class SignInActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySignInBinding
     private lateinit var firebaseAuth: FirebaseAuth
+
+    private fun getFirebaseErrorMessage(exception: Exception?): String {
+        return when ((exception as? FirebaseAuthException)?.errorCode) {
+            "ERROR_INVALID_EMAIL" -> "Invalid email address format"
+            "ERROR_WRONG_PASSWORD" -> "Incorrect email or password"
+            "ERROR_USER_NOT_FOUND" -> "Incorrect email or password"
+            "ERROR_USER_DISABLED" -> "This account has been disabled"
+            "ERROR_TOO_MANY_REQUESTS" -> "Too many attempts. Please try again later"
+            "ERROR_OPERATION_NOT_ALLOWED" -> "Sign in is currently disabled"
+            "ERROR_INVALID_CREDENTIAL" -> "Incorrect email or password"
+            else -> "Authentication failed. Please check your credentials and try again"
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,7 +107,7 @@ class SignInActivity : AppCompatActivity() {
                     } else {
                         // Re-enable the button if sign in fails
                         binding.SignInBtn.isEnabled = true
-                        Toast.makeText(this, it.exception.toString(), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, getFirebaseErrorMessage(it.exception), Toast.LENGTH_SHORT).show()
 
                     }
                 }

@@ -84,7 +84,7 @@ class MyProfileActivity : AppCompatActivity() {
             .document("info")
             .get()
             .addOnSuccessListener { doc ->
-                val name = doc.getString("name") ?: "Unknown User"
+                val name = doc.getString("name") ?: "User"
                 val photoUrl = doc.getString("photoUrl")
 
                 tvName.text = name

@@ -15,6 +15,7 @@ import android.graphics.Color
 import android.content.res.Configuration
 import android.view.View
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import moe.group13.routenode.MainActivity
 import moe.group13.routenode.databinding.ActivitySignUpBinding
 
@@ -22,6 +23,18 @@ class SignUpActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySignUpBinding
     private lateinit var firebaseAuth: FirebaseAuth
+
+    private fun getFirebaseErrorMessage(exception: Exception?): String {
+        return when ((exception as? FirebaseAuthException)?.errorCode) {
+            "ERROR_INVALID_EMAIL" -> "Invalid email address format"
+            "ERROR_EMAIL_ALREADY_IN_USE" -> "This email is already registered"
+            "ERROR_WEAK_PASSWORD" -> "Password is too weak. Please use at least 6 characters"
+            "ERROR_USER_DISABLED" -> "This account has been disabled"
+            "ERROR_TOO_MANY_REQUESTS" -> "Too many attempts. Please try again later"
+            "ERROR_OPERATION_NOT_ALLOWED" -> "Sign up is currently disabled"
+            else -> "Registration failed. Please check your information and try again"
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,7 +87,7 @@ class SignUpActivity : AppCompatActivity() {
                                 startActivity(intent)
                                 finish()
                             } else {
-                                Toast.makeText(this, it.exception.toString(), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, getFirebaseErrorMessage(it.exception), Toast.LENGTH_SHORT).show()
                             }
                         }
                 } else {
