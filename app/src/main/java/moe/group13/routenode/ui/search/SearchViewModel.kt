@@ -19,6 +19,16 @@ class SearchViewModel(
     
     private var savedRouteNodeData: List<RouteNodeAdapter.RouteNodeData>? = null
     
+    private var editModeState: EditModeState? = null
+    
+    data class EditModeState(
+        val isEditMode: Boolean,
+        val editingRouteId: String?,
+        val editingRouteTitle: String?,
+        val originalRouteNodeDataJson: String?,
+        val originalDescription: String?
+    )
+    
     fun askAIForAdvice() {
         viewModelScope.launch {
             try {
@@ -128,5 +138,30 @@ class SearchViewModel(
     
     fun clearSavedRouteNodeData() {
         savedRouteNodeData = null
+    }
+    
+    // Save and restore edit mode state for configuration changes
+    fun saveEditModeState(
+        isEditMode: Boolean,
+        editingRouteId: String?,
+        editingRouteTitle: String?,
+        originalRouteNodeDataJson: String?,
+        originalDescription: String?
+    ) {
+        editModeState = EditModeState(
+            isEditMode = isEditMode,
+            editingRouteId = editingRouteId,
+            editingRouteTitle = editingRouteTitle,
+            originalRouteNodeDataJson = originalRouteNodeDataJson,
+            originalDescription = originalDescription
+        )
+    }
+    
+    fun getSavedEditModeState(): EditModeState? {
+        return editModeState
+    }
+    
+    fun clearEditModeState() {
+        editModeState = null
     }
 }

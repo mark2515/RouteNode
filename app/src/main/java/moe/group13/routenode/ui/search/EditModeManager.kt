@@ -35,6 +35,7 @@ class EditModeManager(
     var isWaitingForAiToSave = false
     var originalRouteNodeDataJson: String? = null
         private set
+    private var originalDescription: String? = null
 
     fun setupEditModeButtons(view: View) {
         val buttonCancel = view.findViewById<MaterialButton>(R.id.buttonCancelEdit)
@@ -95,9 +96,13 @@ class EditModeManager(
         isEditMode = true
         editingRouteId = routeId
         editingRouteTitle = routeTitle
+        this.originalDescription = originalDescription
 
         // Reset the waiting flag
         isWaitingForAiToSave = false
+
+        // Save state to ViewModel
+        saveStateToViewModel()
 
         // Show edit mode banner
         fragment.view?.findViewById<MaterialCardView>(R.id.editModeBanner)?.visibility =
@@ -128,6 +133,10 @@ class EditModeManager(
         editingRouteTitle = null
         isWaitingForAiToSave = false
         originalRouteNodeDataJson = null
+        originalDescription = null
+
+        // Clear state from ViewModel
+        viewModel.clearEditModeState()
 
         // Hide edit mode banner
         fragment.view?.findViewById<MaterialCardView>(R.id.editModeBanner)?.visibility = View.GONE
@@ -176,6 +185,7 @@ class EditModeManager(
                 }
                 editingRouteTitle = newName
                 updateEditModeText(newName)
+                saveStateToViewModel()
                 dialog.dismiss()
             }
         }
@@ -384,6 +394,42 @@ class EditModeManager(
     fun needsAiGeneration(): Boolean {
         return isWaitingForAiToSave
     }
+    
+    // Save current edit mode state to ViewModel
+    private fun saveStateToViewModel() {
+        viewModel.saveEditModeState(
+            isEditMode = isEditMode,
+            editingRouteId = editingRouteId,
+            editingRouteTitle = editingRouteTitle,
+            originalRouteNodeDataJson = originalRouteNodeDataJson,
+            originalDescription = originalDescription
+        )
+    }
+    
+    fun restoreStateFromViewModel() {
+        val savedState = viewModel.getSavedEditModeState() ?: return
+        
+        if (savedState.isEditMode && savedState.editingRouteId != null) {
+            isEditMode = savedState.isEditMode
+            editingRouteId = savedState.editingRouteId
+            editingRouteTitle = savedState.editingRouteTitle
+            originalRouteNodeDataJson = savedState.originalRouteNodeDataJson
+            originalDescription = savedState.originalDescription
+            
+            // Show edit mode banner
+            fragment.view?.findViewById<MaterialCardView>(R.id.editModeBanner)?.visibility =
+                View.VISIBLE
+            updateEditModeText(savedState.editingRouteTitle ?: "Unknown Route")
+            
+            // Reset Done button to default state
+            fragment.view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.isEnabled = true
+            fragment.view?.findViewById<MaterialButton>(R.id.buttonDoneEdit)?.text = "Done"
+            
+            // Keep Ask AI button visible in edit mode
+            fragment.view?.findViewById<MaterialButton>(R.id.buttonAskAI)?.visibility = View.VISIBLE
+        }
+    }
+    
     //use google geocoder to convert addresses to geopoints, for google maps pins
     private fun convertAddressesToGeoPoints(
         context: Context,

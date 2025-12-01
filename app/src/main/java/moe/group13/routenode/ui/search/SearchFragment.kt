@@ -113,6 +113,9 @@ class SearchFragment : Fragment() {
 
         // Setup edit mode buttons
         editModeManager.setupEditModeButtons(view)
+        
+        // Restore edit mode state after configuration change (e.g., screen rotation)
+        editModeManager.restoreStateFromViewModel()
 
         // Check if we need to load route data for editing
         editModeManager.checkForEditRoute()
