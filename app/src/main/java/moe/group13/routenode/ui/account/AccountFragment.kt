@@ -46,10 +46,20 @@ class AccountFragment : Fragment() {
     private var cachedEmail: String? = null
     private var cachedPhotoUrl: String? = null
 
+    // Weather state to preserve across rotation
+    private var cachedWeatherCity: String? = null
+    private var cachedWeatherEmoji: String? = null
+    private var cachedWeatherTemp: String? = null
+    private var cachedWeatherStatus: String? = null
+
     companion object {
         private const val KEY_NAME = "cached_name"
         private const val KEY_EMAIL = "cached_email"
         private const val KEY_PHOTO_URL = "cached_photo_url"
+        private const val KEY_WEATHER_CITY = "cached_weather_city"
+        private const val KEY_WEATHER_EMOJI = "cached_weather_emoji"
+        private const val KEY_WEATHER_TEMP = "cached_weather_temp"
+        private const val KEY_WEATHER_STATUS = "cached_weather_status"
     }
 
     override fun onCreateView(
@@ -83,7 +93,7 @@ class AccountFragment : Fragment() {
             cachedName = savedInstanceState.getString(KEY_NAME)
             cachedEmail = savedInstanceState.getString(KEY_EMAIL)
             cachedPhotoUrl = savedInstanceState.getString(KEY_PHOTO_URL)
-            
+
             // Immediately display cached data to prevent flicker
             if (cachedName != null) {
                 nameTextView.text = cachedName
@@ -95,6 +105,25 @@ class AccountFragment : Fragment() {
                 Glide.with(requireContext())
                     .load(cachedPhotoUrl)
                     .into(profileImage)
+            }
+
+            // Restore cached weather UI
+            cachedWeatherCity = savedInstanceState.getString(KEY_WEATHER_CITY)
+            cachedWeatherEmoji = savedInstanceState.getString(KEY_WEATHER_EMOJI)
+            cachedWeatherTemp = savedInstanceState.getString(KEY_WEATHER_TEMP)
+            cachedWeatherStatus = savedInstanceState.getString(KEY_WEATHER_STATUS)
+
+            if (cachedWeatherCity != null) {
+                weatherCity.text = cachedWeatherCity
+            }
+            if (cachedWeatherEmoji != null) {
+                weatherEmoji.text = cachedWeatherEmoji
+            }
+            if (cachedWeatherTemp != null) {
+                weatherTemp.text = cachedWeatherTemp
+            }
+            if (cachedWeatherStatus != null) {
+                weatherStatus.text = cachedWeatherStatus
             }
         }
 
@@ -119,7 +148,10 @@ class AccountFragment : Fragment() {
             startActivity(intent)
         }
 
-        checkLocationPermission()
+        // Only load location & weather if we don't already have cached weather
+        if (cachedWeatherCity == null || cachedWeatherStatus == null) {
+            checkLocationPermission()
+        }
     }
 
     override fun onResume() {
@@ -162,6 +194,12 @@ class AccountFragment : Fragment() {
         cachedName?.let { outState.putString(KEY_NAME, it) }
         cachedEmail?.let { outState.putString(KEY_EMAIL, it) }
         cachedPhotoUrl?.let { outState.putString(KEY_PHOTO_URL, it) }
+
+        // Save current weather data to survive rotation
+        cachedWeatherCity?.let { outState.putString(KEY_WEATHER_CITY, it) }
+        cachedWeatherEmoji?.let { outState.putString(KEY_WEATHER_EMOJI, it) }
+        cachedWeatherTemp?.let { outState.putString(KEY_WEATHER_TEMP, it) }
+        cachedWeatherStatus?.let { outState.putString(KEY_WEATHER_STATUS, it) }
     }
 
     private fun checkLocationPermission() {
@@ -170,8 +208,7 @@ class AccountFragment : Fragment() {
         if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED
         ) {
-            ActivityCompat.requestPermissions(
-                requireActivity(),
+            requestPermissions(
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 requestCodeLocation
             )
@@ -268,14 +305,23 @@ class AccountFragment : Fragment() {
                     else -> "🌤️"
                 }
 
-                weatherCity.text = city
-                weatherEmoji.text = emoji
-                weatherTemp.text = "$temp°C"
-                weatherStatus.text = condition
+                // Cache weather data
+                cachedWeatherCity = city
+                cachedWeatherEmoji = emoji
+                cachedWeatherTemp = "$temp°C"
+                cachedWeatherStatus = condition
+
+                weatherCity.text = cachedWeatherCity
+                weatherEmoji.text = cachedWeatherEmoji
+                weatherTemp.text = cachedWeatherTemp
+                weatherStatus.text = cachedWeatherStatus
             },
             {
-                weatherCity.text = city
-                weatherStatus.text = "Error"
+                cachedWeatherCity = city
+                cachedWeatherStatus = "Error"
+
+                weatherCity.text = cachedWeatherCity
+                weatherStatus.text = cachedWeatherStatus
             }
         )
 
