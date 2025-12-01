@@ -184,13 +184,15 @@ class RouteNodeAdapter(
                 if (currentText.isNotEmpty()) {
                     try {
                         val value = currentText.toDouble()
-                        if (value > 0) {
-                            val ceiledValue = kotlin.math.ceil(value).toInt()
-                            nodeHolder.editDistance.setText(ceiledValue.toString())
-                            val pos = nodeHolder.bindingAdapterPosition
-                            if (pos != RecyclerView.NO_POSITION && pos < items.size) {
-                                items[pos].distance = ceiledValue.toString()
-                            }
+                        val finalValue = if (value <= 0) {
+                            1
+                        } else {
+                            kotlin.math.ceil(value).toInt()
+                        }
+                        nodeHolder.editDistance.setText(finalValue.toString())
+                        val pos = nodeHolder.bindingAdapterPosition
+                        if (pos != RecyclerView.NO_POSITION && pos < items.size) {
+                            items[pos].distance = finalValue.toString()
                         }
                     } catch (e: NumberFormatException) {
                     }
