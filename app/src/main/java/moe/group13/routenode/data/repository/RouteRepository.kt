@@ -165,12 +165,8 @@ class RouteRepository(
     suspend fun saveFavorite(route: Route): Boolean {
         return try {
             val currentUid = uid()
-            val currentTime = System.currentTimeMillis()
             // Ensure creatorId is set to the current user who is saving the favorite
-            val routeWithCreator = route.copy(
-                creatorId = currentUid,
-                updatedAt = currentTime
-            )
+            val routeWithCreator = route.copy(creatorId = currentUid)
             favoritesCollection
                 .document(currentUid)
                 .collection("routes")
@@ -224,7 +220,6 @@ class RouteRepository(
             favoritesCollection
                 .document(targetUid)
                 .collection("routes")
-                .orderBy("updatedAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get()
                 .await()
                 .toObjects(Route::class.java)
@@ -295,64 +290,73 @@ class RouteRepository(
     }
 
     //swap tag and latlng
-    suspend fun swap(routeId: String, oldTag: String, newTag: String, newLatLng: LatLng): Boolean {
-        return try {
-            val currentUid = uid()
-            val docRef = favoritesCollection
-                .document(currentUid)
-                .collection("routes")
-                .document(routeId)
-
-            val document = docRef.get().await()
-            
-            if (!document.exists()) {
-                Log.e("ROUTE_REPO", "Route does not exist: $routeId")
-                return false
-            }
-            
-            //pull old arrays
-            val oldTags = document.get("tags") as? List<String>
-            val oldWaypoints = document.get("waypoints") as? List<GeoPoint>
-
-            if (oldTags == null || oldWaypoints == null) {
-                Log.e("ROUTE_REPO", "No tags or waypoints found in route")
-                return false
-            }
-
-            Log.d("ROUTE_REPO", "Original tags: $oldTags")
-
-            // create copies
-            val updatedTags = oldTags.toMutableList()
-            val updatedWaypoints = oldWaypoints.toMutableList()
-
-            // find index of oldTag, replace
-            val index = updatedTags.indexOf(oldTag)
-            if (index == -1) {
-                Log.e("ROUTE_REPO", "Tag not found: $oldTag")
-                return false
-            }
-
-            //convert newLatLng to GeoPoint
-            val newGeoPoint = GeoPoint(newLatLng.latitude, newLatLng.longitude)
-            updatedWaypoints[index] = newGeoPoint
-
-            //newTag = index of oldtag
-            updatedTags[index] = newTag
-
-            // Update waypoints and tags
-            docRef.update("waypoints", updatedWaypoints).await()
-            docRef.update("tags", updatedTags).await()
-            
-            // update description to show that it was tweaked by the user
-            val newDescription = "User created: ${updatedTags.joinToString(", ")}"
-            docRef.update("description", newDescription).await()
-            
-            Log.d("ROUTE_REPO", "Successfully swapped $oldTag -> $newTag")
-            true
-        } catch (e: Exception) {
-            Log.e("ROUTE_REPO", "Error swapping tag", e)
-            false
+    fun swap(routeId: String, oldTag: String, newTag: String, newLatLng: LatLng ) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid == null) {
+            Log.e("MapEditFragment", "User not logged in")
+            return
         }
+        val docRef = FirebaseFirestore.getInstance()
+            .collection("favorites")
+            .document(uid)
+            .collection("routes")
+            .document(routeId)
+
+        docRef.get()
+            .addOnSuccessListener { document ->
+                if (!document.exists()) {
+                    Log.e("MapEditFragment", "Route does not exist: $routeId")
+                    return@addOnSuccessListener
+                }
+                //pull old arrays
+                val oldTags = document.get("tags") as? List<String>
+                val oldWaypoints = document.get("waypoints") as? List<GeoPoint>
+
+                if (oldTags == null || oldWaypoints == null) {
+                    Log.e("MapEditFragment", "No tags found in route")
+                    return@addOnSuccessListener
+                }
+
+                Log.d("MapEditFragment", "Original tags: $oldTags")
+
+                // create copies
+                val updatedTags = oldTags.toMutableList()
+                val updatedWaypoints = oldWaypoints.toMutableList()
+
+                // find index  of oldTag, replace
+                val index = updatedTags.indexOf(oldTag)
+
+                //convert newLatLng to GeoPoint
+                val newGeoPoint = GeoPoint(newLatLng.latitude, newLatLng.longitude)
+                updatedWaypoints[index] = newGeoPoint
+
+                //newTag = index of oldtag
+                updatedTags[index] = newTag
+
+                docRef.update("waypoints", updatedWaypoints)
+
+                // send array back into firebase
+                docRef.update("tags", updatedTags)
+                    .addOnSuccessListener {
+                        Log.d("MapEditFragment", "Successfully swapped $oldTag -> $newTag")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("MapEditFragment", "Failed to update tags", e)
+                    }
+                // update description to show that it was tweaked by the user
+                val newDescription = "User created: ${updatedTags.joinToString(", ")}"
+                docRef.update("description", newDescription)
+                    .addOnSuccessListener {
+                        Log.d("MapEditFragment", "Successfully updated description")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("MapEditFragment", "Failed to update description", e)
+                    }
+            }
+            .addOnFailureListener { e ->
+                Log.e("MapEditFragment", "Failed to fetch route", e)
+            }
+
     }
 
 

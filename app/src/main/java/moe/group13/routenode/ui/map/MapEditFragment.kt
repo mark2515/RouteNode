@@ -8,10 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.libraries.places.api.Places
@@ -19,9 +17,6 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
 import com.google.android.gms.common.api.Status
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import moe.group13.routenode.R
 import moe.group13.routenode.data.model.Route
 import moe.group13.routenode.data.repository.RouteRepository
@@ -120,38 +115,20 @@ class MapEditFragment : Fragment() {
             val selectedTag = tagAdapter.getSelectedTag()
             val selectedPlaceName = selectedPlace?.name
             if (selectedTag == null || selectedPlaceName == null) {
-                Toast.makeText(requireContext(), "Please select a tag and place", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            val selectedLatLng = selectedPlace!!.latLng
-            if (selectedLatLng == null) {
-                Toast.makeText(requireContext(), "Invalid location", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            
-            // Disable button to prevent multiple clicks
-            swapButton.isEnabled = false
-            
-            //swap using coroutine
-            lifecycleScope.launch {
-                val success = withContext(Dispatchers.IO) {
-                    routeRepository.swap(routeId!!, selectedTag, selectedPlaceName, selectedLatLng)
-                }
-                
-                if (success) {
-                    //tell activity that fragment swap is done
-                    parentFragmentManager.setFragmentResult("editFinished", Bundle())
-                    //hide fragment
-                    activity?.findViewById<FrameLayout>(R.id.overlay_fragment_container)?.visibility =
-                        View.GONE
-                    //bring back the favorite list to be visible again
-                    (activity as? MapActivity)?.favoritesRecycler?.visibility = View.VISIBLE
-                    parentFragmentManager.popBackStack()
-                } else {
-                    Toast.makeText(requireContext(), "Failed to update route", Toast.LENGTH_SHORT).show()
-                    swapButton.isEnabled = true
-                }
-            }
+            val selectedLatLng = selectedPlace!!.latLng!!
+            //swap
+            routeRepository.swap(routeId!!, selectedTag, selectedPlaceName, selectedLatLng)
+            //tell activity that fragment swap is done
+            parentFragmentManager.setFragmentResult("editFinished", Bundle())
+            //hide fragment
+            activity?.findViewById<FrameLayout>(R.id.overlay_fragment_container)?.visibility =
+                View.GONE
+            //bring back the favorite list to be visible again
+            (activity as? MapActivity)?.favoritesRecycler?.visibility = View.VISIBLE
+            parentFragmentManager.popBackStack()
+
         }
     }
 
