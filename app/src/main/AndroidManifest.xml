@@ -47,7 +47,9 @@
         <activity android:name=".ui.account.AIModelsActivity" />
         <activity android:name=".ui.account.CommonLocationsActivity" />
         <activity android:name=".ui.account.CommonPlacesActivity" />
-        <activity android:name=".ui.map.MapActivity" />
+        <activity 
+            android:name=".ui.map.MapActivity"
+            android:screenOrientation="portrait" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key"/>

@@ -6,6 +6,21 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
+    <!-- Warning Message -->
+    <TextView
+        android:id="@+id/warning_message_edit"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="⚠️ AI may make mistakes, incorrect addresses may cause go and preview to fail"
+        android:textColor="#FF6B00"
+        android:textSize="14sp"
+        android:textStyle="italic"
+        android:gravity="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <!-- Google Places Autocomplete Fragment -->
     <fragment
         android:id="@+id/autocomplete_fragment"
@@ -14,7 +29,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toStartOf="@+id/swapButton"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/warning_message_edit" />
 
     <!-- Swap -->
     <Button
