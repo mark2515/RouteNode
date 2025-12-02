@@ -290,10 +290,11 @@ class RouteRepository(
     }
 
     //swap tag and latlng
-    fun swap(routeId: String, oldTag: String, newTag: String, newLatLng: LatLng ) {
+    fun swap(routeId: String, oldTag: String, newTag: String, newLatLng: LatLng, onComplete: ((Boolean, String?) -> Unit)? = null) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
         if (uid == null) {
             Log.e("MapEditFragment", "User not logged in")
+            onComplete?.invoke(false, "User not logged in")
             return
         }
         val docRef = FirebaseFirestore.getInstance()
@@ -306,6 +307,7 @@ class RouteRepository(
             .addOnSuccessListener { document ->
                 if (!document.exists()) {
                     Log.e("MapEditFragment", "Route does not exist: $routeId")
+                    onComplete?.invoke(false, "Route does not exist")
                     return@addOnSuccessListener
                 }
                 //pull old arrays
@@ -313,7 +315,8 @@ class RouteRepository(
                 val oldWaypoints = document.get("waypoints") as? List<GeoPoint>
 
                 if (oldTags == null || oldWaypoints == null) {
-                    Log.e("MapEditFragment", "No tags found in route")
+                    Log.e("MapEditFragment", "No tags or waypoints found in route")
+                    onComplete?.invoke(false, "Invalid route data")
                     return@addOnSuccessListener
                 }
 
@@ -325,9 +328,24 @@ class RouteRepository(
 
                 // find index  of oldTag, replace
                 val index = updatedTags.indexOf(oldTag)
-
+                
+                // Check if tag exists
+                if (index == -1) {
+                    Log.e("MapEditFragment", "Tag not found: $oldTag")
+                    onComplete?.invoke(false, "Location not found in route")
+                    return@addOnSuccessListener
+                }
+                
                 //convert newLatLng to GeoPoint
                 val newGeoPoint = GeoPoint(newLatLng.latitude, newLatLng.longitude)
+                
+                // Handle waypoints array - expand it if necessary to match tags array size
+                while (updatedWaypoints.size <= index) {
+                    // Add placeholder GeoPoints for missing waypoints
+                    updatedWaypoints.add(GeoPoint(0.0, 0.0))
+                }
+                
+                // Update the waypoint at the correct index
                 updatedWaypoints[index] = newGeoPoint
 
                 //newTag = index of oldtag
@@ -339,9 +357,11 @@ class RouteRepository(
                 docRef.update("tags", updatedTags)
                     .addOnSuccessListener {
                         Log.d("MapEditFragment", "Successfully swapped $oldTag -> $newTag")
+                        onComplete?.invoke(true, null)
                     }
                     .addOnFailureListener { e ->
                         Log.e("MapEditFragment", "Failed to update tags", e)
+                        onComplete?.invoke(false, "Failed to update location")
                     }
                 // update description to show that it was tweaked by the user
                 val newDescription = "User created: ${updatedTags.joinToString(", ")}"
@@ -355,6 +375,7 @@ class RouteRepository(
             }
             .addOnFailureListener { e ->
                 Log.e("MapEditFragment", "Failed to fetch route", e)
+                onComplete?.invoke(false, "Failed to fetch route data")
             }
 
     }

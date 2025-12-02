@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -114,20 +115,50 @@ class MapEditFragment : Fragment() {
         swapButton.setOnClickListener {
             val selectedTag = tagAdapter.getSelectedTag()
             val selectedPlaceName = selectedPlace?.name
-            if (selectedTag == null || selectedPlaceName == null) {
+            
+            // Validate inputs
+            if (selectedTag == null) {
+                Toast.makeText(requireContext(), "Please select a location to swap", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            val selectedLatLng = selectedPlace!!.latLng!!
-            //swap
-            routeRepository.swap(routeId!!, selectedTag, selectedPlaceName, selectedLatLng)
-            //tell activity that fragment swap is done
-            parentFragmentManager.setFragmentResult("editFinished", Bundle())
-            //hide fragment
-            activity?.findViewById<FrameLayout>(R.id.overlay_fragment_container)?.visibility =
-                View.GONE
-            //bring back the favorite list to be visible again
-            (activity as? MapActivity)?.favoritesRecycler?.visibility = View.VISIBLE
-            parentFragmentManager.popBackStack()
+            
+            if (selectedPlaceName == null) {
+                Toast.makeText(requireContext(), "Please search and select a new address", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            
+            val selectedLatLng = selectedPlace?.latLng
+            if (selectedLatLng == null) {
+                Toast.makeText(requireContext(), "Invalid location selected", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            
+            if (routeId == null) {
+                Toast.makeText(requireContext(), "Route ID is missing", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            
+            //swap with callback
+            routeRepository.swap(routeId!!, selectedTag, selectedPlaceName, selectedLatLng) { success, errorMessage ->
+                activity?.runOnUiThread {
+                    if (success) {
+                        Toast.makeText(requireContext(), "Location updated successfully", Toast.LENGTH_SHORT).show()
+                        
+                        //tell activity that fragment swap is done
+                        parentFragmentManager.setFragmentResult("editFinished", Bundle())
+                        //hide fragment
+                        activity?.findViewById<FrameLayout>(R.id.overlay_fragment_container)?.visibility =
+                            View.GONE
+                        //bring back the favorite list to be visible again
+                        (activity as? MapActivity)?.favoritesRecycler?.visibility = View.VISIBLE
+                        parentFragmentManager.popBackStack()
+                    } else {
+                        val message = errorMessage ?: "Failed to update location. Please try again."
+                        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+                        Log.e("MapEditFragment", "Swap failed: $errorMessage")
+                    }
+                }
+            }
 
         }
     }
