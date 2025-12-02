@@ -7,8 +7,6 @@ data class FavoriteAiResponse (
     val userId: String,
     val startLocation: String,
     val targetLocation: String,
-    val aiResponse: String
+    val aiResponse: String,
+    val savedAt: Long = System.currentTimeMillis()
 )
-
-
-

@@ -165,8 +165,12 @@ class RouteRepository(
     suspend fun saveFavorite(route: Route): Boolean {
         return try {
             val currentUid = uid()
+            val currentTime = System.currentTimeMillis()
             // Ensure creatorId is set to the current user who is saving the favorite
-            val routeWithCreator = route.copy(creatorId = currentUid)
+            val routeWithCreator = route.copy(
+                creatorId = currentUid,
+                updatedAt = currentTime
+            )
             favoritesCollection
                 .document(currentUid)
                 .collection("routes")
@@ -220,6 +224,7 @@ class RouteRepository(
             favoritesCollection
                 .document(targetUid)
                 .collection("routes")
+                .orderBy("updatedAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get()
                 .await()
                 .toObjects(Route::class.java)

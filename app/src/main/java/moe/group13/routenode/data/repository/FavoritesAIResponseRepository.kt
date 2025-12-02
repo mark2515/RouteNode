@@ -18,20 +18,20 @@ class FavoritesAIResponseRepository(
 
     private val userAiFavoriteCollection = db.collection("userAiResponse")
     suspend fun saveFavorite(uid: String, favoriteAiResponse: FavoriteAiResponse){
+        val currentTime = System.currentTimeMillis()
+        val favoriteWithTimestamp = favoriteAiResponse.copy(savedAt = currentTime)
         userAiFavoriteCollection
             .document(uid)
             .collection("favoriteAiResponse")
-            .document(favoriteAiResponse.id)
-            .set(favoriteAiResponse)
+            .document(favoriteWithTimestamp.id)
+            .set(favoriteWithTimestamp)
             .await()
-
-
-
     }
     suspend fun getFavorites(uid: String): List<FavoriteAiResponse>{
         return userAiFavoriteCollection
             .document(uid)
             .collection("favoriteAiResponse")
+            .orderBy("savedAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
             .get()
             .await()
             .toObjects(FavoriteAiResponse::class.java)
