@@ -12,7 +12,9 @@ import androidx.lifecycle.lifecycleScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.GeoPoint
 import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import moe.group13.routenode.data.model.Route
 import moe.group13.routenode.ui.routes.RouteViewModel
 import java.util.Locale
@@ -56,20 +58,30 @@ class FavoriteSaveManager(
                 .setTitle("Name Your Favorite")
                 .setMessage("Enter a name for this favorite route:")
                 .setView(input)
-                .setPositiveButton("Save") { _, _ ->
+                .setPositiveButton("Save") { dialog, _ ->
                     val favoriteName = input.text.toString().trim()
                     if (favoriteName.isBlank()) {
                         Toast.makeText(fragment.requireContext(), "Please enter a name", Toast.LENGTH_SHORT).show()
                         return@setPositiveButton
                     }
-                    saveFavoriteWithName(routeNodeData, aiResponse, favoriteName)
+                    
+                    // Dismiss dialog immediately to prevent UI freeze
+                    dialog.dismiss()
+                    
+                    // Show processing message
+                    Toast.makeText(fragment.requireContext(), "Saving route...", Toast.LENGTH_SHORT).show()
+                    
+                    // Process in background thread
+                    fragment.lifecycleScope.launch {
+                        saveFavoriteWithName(routeNodeData, aiResponse, favoriteName)
+                    }
                 }
                 .setNegativeButton("Cancel", null)
                 .show()
         }
     }
 
-    private fun saveFavoriteWithName(
+    private suspend fun saveFavoriteWithName(
         routeNodeData: List<RouteNodeAdapter.RouteNodeData>,
         aiResponse: String?,
         favoriteName: String
@@ -83,8 +95,10 @@ class FavoriteSaveManager(
 
         Log.d("FavoriteSaveManager", "Waypoints: $waypoints")
         
-        // Convert addresses to geocode
-        val geoPoints = convertAddressesToGeoPoints(fragment.requireContext(), waypoints)
+        // Convert addresses to geocode in IO thread
+        val geoPoints = withContext(Dispatchers.IO) {
+            convertAddressesToGeoPoints(fragment.requireContext(), waypoints)
+        }
         
         // Calculate total distance
         val totalDistance = routeNodeData.sumOf {
@@ -137,11 +151,15 @@ class FavoriteSaveManager(
 
         // Save as favorite
         routeViewModel.saveFavorite(route, favoriteName)
-        Toast.makeText(fragment.requireContext(), "Route saved to favorites!", Toast.LENGTH_SHORT).show()
-
-        // Reset the input screen after saving
-        routeNodeAdapter.reset()
-        viewModel.clearAiResponse()
+        
+        // Show success message on main thread
+        withContext(Dispatchers.Main) {
+            Toast.makeText(fragment.requireContext(), "Route saved to favorites!", Toast.LENGTH_SHORT).show()
+            
+            // Reset the input screen after saving
+            routeNodeAdapter.reset()
+            viewModel.clearAiResponse()
+        }
     }
     //use google geocoder to convert addresses to geopoints, for google maps pins
     private fun convertAddressesToGeoPoints(
